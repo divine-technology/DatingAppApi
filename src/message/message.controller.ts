@@ -5,16 +5,23 @@ import {
   PaginateDto,
   ResponsePaginateDtoMessages
 } from '../users/dto/user.paginate.dto';
+import {
+  ApiBody,
+  ApiExtraModels,
+  ApiOperation,
+  ApiTags
+} from '@nestjs/swagger';
+import { Message } from '../users/user.schema';
+import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
 
+@ApiTags('Message')
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
-  @Get()
-  test() {
-    return this.messageService.test();
-  }
-
+  @ApiOperation({ summary: 'Send message' })
+  @ApiExtraModels(Message)
+  @ApiBody({ schema: { example: SEND_MESSAGE_EXAMPLE } })
   @Post('/send-message/:likeId')
   async sendMessage(
     @Param('likeId') likeId: string,
@@ -23,6 +30,8 @@ export class MessageController {
     return await this.messageService.sendMessage(likeId, messageDto);
   }
 
+  @ApiOperation({ summary: 'Get messages between users' })
+  @ApiExtraModels(Message)
   @Get('/get-conversation/:likeId')
   async getConversation(
     @Param('likeId') likeId: string,
