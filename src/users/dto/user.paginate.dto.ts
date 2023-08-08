@@ -1,9 +1,14 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Like, Message, User } from '../user.schema';
 
-export interface PaginateDto {
+export class PaginateDto {
+  @ApiProperty({ required: false })
   page: number;
+  @ApiProperty({ required: false })
   limit: number;
+  @ApiProperty({ required: false })
   sort: number;
+  @ApiProperty({ required: false })
   sortBy: string;
 }
 
@@ -19,11 +24,17 @@ export interface ResponsePaginateDtoMessages {
   data: Message[];
 }
 
-export interface UserPaginateDto extends PaginateDto {
+export class UserPaginateDto extends PaginateDto {
+  @ApiProperty({ required: false })
   name: string;
+  @ApiProperty({ required: false })
   email: string;
+  @ApiProperty({ required: false })
   role: string;
+  @ApiProperty({ required: false })
   forgotPasswordToken: string;
+  @ApiProperty({ required: false })
   forgotPasswordTimestamp: string;
+  @ApiProperty({ required: false })
   createdAccountTimestamp: string;
 }

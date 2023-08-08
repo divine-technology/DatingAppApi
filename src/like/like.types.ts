@@ -50,6 +50,11 @@ export function IsMatchStatus(validationOptions?: ValidationOptions) {
   };
 }
 
+export class LikeWithErrorStatus {
+  _id: string;
+  hasErrors: boolean;
+}
+
 export enum MatchStatus {
   LIKED = 'liked',
   ONE_LIKED = 'one_liked',

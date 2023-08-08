@@ -20,11 +20,33 @@ import {
 } from './dto/user.paginate.dto';
 import { UserRadiusDto } from './dto/user.radius.dto';
 import { MessageDto } from './dto/message.dto';
+import {
+  ApiBody,
+  ApiExtraModels,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  getSchemaPath
+} from '@nestjs/swagger';
+import {
+  CREATE_USER_EXAMPLE,
+  UPDATE_USER_EXAMPLE,
+  USER_RADIUS_EXAMPLE
+} from '../swagger/example';
 
+@ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOperation({ summary: 'Get all users pagination' })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    }
+  })
   @Get()
   async getAllUsers(
     @Query()
@@ -59,7 +81,17 @@ export class UsersController {
     return await this.usersService.getAllForLikes(id);
   } */
 
-  @Get('/radius')
+  @ApiOperation({ summary: 'Get all users in radius' })
+  @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE } })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    },
+    isArray: true
+  })
+  @Post('/radius')
   async getRadius(
     @Body()
     userRadiusDto: UserRadiusDto
@@ -67,11 +99,28 @@ export class UsersController {
     return await this.usersService.getRadius(userRadiusDto);
   }
 
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    }
+  })
   @Get('/get/:id')
   async getOneUser(@Param('id') id: string): Promise<User> {
     return await this.usersService.getOneUser(id);
   }
 
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBody({ schema: { example: CREATE_USER_EXAMPLE } })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    }
+  })
   @Post()
   async createUser(
     @Body()
@@ -80,6 +129,15 @@ export class UsersController {
     return await this.usersService.createUser(createUserDto);
   }
 
+  @ApiOperation({ summary: 'Update user' })
+  @ApiBody({ schema: { example: UPDATE_USER_EXAMPLE } })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    }
+  })
   @Put('/update/:id')
   async updateUser(
     @Param('id')
@@ -90,6 +148,14 @@ export class UsersController {
     return await this.usersService.updateById(id, user);
   }
 
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    schema: {
+      $ref: getSchemaPath(User)
+    }
+  })
   @Delete('/delete/:id')
   async deleteUser(
     @Param('id')

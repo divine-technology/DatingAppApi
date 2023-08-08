@@ -6,7 +6,8 @@ import mongoose from 'mongoose';
 import {
   ReactWithUserDto,
   ResponsePaginateDtoLikes,
-  MatchStatus
+  MatchStatus,
+  LikeWithErrorStatus
 } from './like.types';
 import { Like, LikeWithId } from '../users/user.schema';
 import { MessageService } from '../message/message.service';
@@ -15,9 +16,8 @@ import { MessageService } from '../message/message.service';
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
-    private readonly userService: UsersService
-  ) //private readonly messageService: MessageService
-  {}
+    private readonly userService: UsersService //private readonly messageService: MessageService
+  ) {}
 
   async test() {
     return await this.likeRepository.test();
@@ -119,7 +119,8 @@ export class LikeService {
     id: string,
     reactWithUserDto: ReactWithUserDto
   ): Promise<string> {
-    let like: LikeWithId;
+    let like: LikeWithErrorStatus;
+    let message: Boolean;
     if (
       reactWithUserDto.status === MatchStatus.LIKED &&
       reactWithUserDto.likedPhotoUrl != null
@@ -130,12 +131,29 @@ export class LikeService {
         to: likedUserId,
         message: likedPhotoUrl
       };
-      try {
+
+      like = await this.like(id, likedUserId);
+      console.log('FUCKING LIKE: ', { like });
+      if (like.hasErrors) {
+        throw new UnauthorizedException('Error with liking');
+      } else {
+        message = await this.userService.sendMessage(
+          like._id.toString(),
+          messageDto
+        );
+        if (!message) {
+          throw new UnauthorizedException('Error with sending message');
+        } else return 'Reaction saved!';
+      }
+      /* try {
+        console.log('STEP ONE');
         like = await this.like(id, likedUserId);
+        console.log('STEP TWO');
         console.log('STATUS ', like.status);
         await this.userService.sendMessage(like._id.toString(), messageDto);
         return 'Reaction saved';
       } catch {
+        console.log('COCK');
         console.log('LIKE STATUS: ', like.status);
         if (like.status === MatchStatus.ONE_LIKED) {
           await this.likeRepository.deleteLike(like._id.toString());
@@ -151,7 +169,7 @@ export class LikeService {
         } else {
           throw new UnauthorizedException('How did you get here?');
         }
-      }
+      } */
     } else if (reactWithUserDto.status === MatchStatus.DISLIKED) {
       return await this.dislike(id, reactWithUserDto.likedUserId);
     } else if (reactWithUserDto.status === MatchStatus.BLOCKED) {
@@ -163,7 +181,7 @@ export class LikeService {
     }
   }
 
-  async like(id: string, likedUserId: string): Promise<LikeWithId> {
+  async like(id: string, likedUserId: string): Promise<LikeWithErrorStatus> {
     const matchArray = [id, likedUserId];
     const doesMatchExist = await this.likeRepository.findLike(matchArray);
     const like = new Like();
@@ -171,25 +189,50 @@ export class LikeService {
     const newId = new mongoose.Types.ObjectId(id);
     const newlikedUserId = new mongoose.Types.ObjectId(likedUserId);
 
+    let likeWithErrorStatus = null;
+
     if (!doesMatchExist) {
+      console.log('MATCH DOESNT EXIST');
+
       like.users = [newId, newlikedUserId];
       like.status = MatchStatus.ONE_LIKED;
-      return await this.likeRepository.reactWithUser(like);
+      likeWithErrorStatus = await this.likeRepository.reactWithUser(like);
+      return {
+        hasErrors: false,
+        _id: likeWithErrorStatus._id.toString()
+      };
       //return 'Reaction saved';
     } else {
+      console.log('MATCH EXISTS');
+      console.log(
+        'IS IT TRUE OR FALSE: ',
+        doesMatchExist.users[1].toString(),
+        ' 2: ',
+        newId.toString()
+      );
       if (
         doesMatchExist.users[1].toString() === newId.toString() &&
         doesMatchExist.status === MatchStatus.ONE_LIKED
       ) {
+        console.log('LIKED BACK');
+
         like.status = MatchStatus.LIKED_BACK;
-        return await this.likeRepository.updateReaction(
+        likeWithErrorStatus = await this.likeRepository.updateReaction(
           doesMatchExist._id.toString(),
           like
         );
 
+        return {
+          hasErrors: false,
+          _id: likeWithErrorStatus._id.toString()
+        };
         //return 'Reaction saved (LIKED BACK)';
       } else {
-        throw new UnauthorizedException('11');
+        console.log('SHIT');
+        return {
+          hasErrors: true,
+          _id: null
+        };
       }
     }
   }

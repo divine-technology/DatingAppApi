@@ -189,7 +189,7 @@ export class UsersService {
     }
   } */
 
-  async sendMessage(likeId: string, messageDto: MessageDto): Promise<void> {
+  async sendMessage(likeId: string, messageDto: MessageDto): Promise<boolean> {
     const { from, to, message } = messageDto;
     const doesConversationExist = await this.userRepository.findMessage(likeId);
     const findLike = await this.userRepository.findLikeById(likeId);
@@ -211,11 +211,12 @@ export class UsersService {
           };
           const test = await this.userRepository.createMessage(newMessage);
           console.log(test);
+          return true;
         } else {
-          throw new UnauthorizedException('Not a picture! / Cannot do that!');
+          return false;
         }
       } else {
-        throw new UnauthorizedException('1');
+        return false;
       }
     } else if (doesConversationExist) {
       if (findLike.status === MatchStatus.ONE_LIKED) {
@@ -229,8 +230,9 @@ export class UsersService {
           };
           const test = await this.userRepository.createMessage(newMessage);
           console.log(test);
+          return true;
         } else {
-          throw new UnauthorizedException('Cannot send more than 2 messages!');
+          return false;
         }
       } else if (findLike.status === MatchStatus.LIKED_BACK) {
         const messages = await this.userRepository.getFirstFiveMessages(likeId);
@@ -253,8 +255,9 @@ export class UsersService {
             };
             const test = await this.userRepository.createMessage(newMessage);
             console.log(test);
+            return true;
           } else {
-            throw new UnauthorizedException('Not a picture!');
+            return false;
           }
         } else {
           const newMessage = {
@@ -265,12 +268,13 @@ export class UsersService {
           };
           const test = await this.userRepository.createMessage(newMessage);
           console.log(test);
+          return true;
         }
       } else {
-        throw new UnauthorizedException('3');
+        return false;
       }
     } else {
-      throw new UnauthorizedException('4');
+      return false;
     }
   }
 
