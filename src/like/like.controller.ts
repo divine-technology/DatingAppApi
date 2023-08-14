@@ -88,7 +88,10 @@ export class LikeController {
   }
 
   @ApiOperation({ summary: 'React with a user' })
-  @ApiBody({ schema: { example: REACT_WITH_USER_EXAMPLE } })
+  @ApiBody({
+    schema: { example: REACT_WITH_USER_EXAMPLE },
+    type: ReactWithUserDto
+  })
   @ApiExtraModels(Like)
   @ApiResponse({
     status: 200,

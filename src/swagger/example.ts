@@ -1,3 +1,6 @@
+import { ExamplesObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { UpdateUserDto } from '../users/dto/update.user.dto';
+
 export const USER_RADIUS_EXAMPLE = {
   location: {
     type: 'Point',
@@ -12,17 +15,19 @@ export const CREATE_USER_EXAMPLE = {
   password: 'test123'
 };
 
-export const UPDATE_USER_EXAMPLE = {
-  name: 'John Doe',
-  email: 'john@gmail.com',
-  password: 'test123',
-  role: 'Admin',
-  forgotPasswordToken: 'token',
-  forgotPasswordTimestamp: new Date(),
-  createdAccountTimestamp: new Date(),
+export const UPDATE_USER_EXAMPLE: ExamplesObject = {
+  name: { value: 'John Doe' },
+  email: { value: 'john@gmail.com' },
+  password: { value: 'test123' },
+  role: { value: 'Admin' },
+  forgotPasswordToken: { value: 'token' },
+  forgotPasswordTimestamp: { value: new Date().toString() },
+  createdAccountTimestamp: { value: new Date().toString() },
   location: {
-    type: 'Point',
-    coordinates: [44.20169, 17.90397]
+    value: {
+      type: 'Point',
+      coordinates: [44.20169, 17.90397]
+    }
   }
 };
 

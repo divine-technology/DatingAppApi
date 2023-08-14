@@ -25,7 +25,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Login user' })
-  @ApiBody({ schema: { example: LOGIN_USER_EXAMPLE } })
+  @ApiBody({ schema: { example: LOGIN_USER_EXAMPLE }, type: LoginUserDto })
   @ApiResponse({
     status: 200,
     type: String
@@ -39,7 +39,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Forgot password' })
-  @ApiBody({ schema: { example: 'test@mail.com' } })
+  @ApiBody({ schema: { example: 'test@mail.com' }, type: ForgotPasswordDto })
   @ApiResponse({
     status: 200,
     type: String
@@ -53,7 +53,10 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Change forgot password' })
-  @ApiBody({ schema: { example: CHANGE_FORGOT_PASSWORD_EXAMPLE } })
+  @ApiBody({
+    schema: { example: CHANGE_FORGOT_PASSWORD_EXAMPLE },
+    type: ChangeForgotPasswordDto
+  })
   @ApiResponse({
     status: 200,
     type: String
@@ -67,7 +70,10 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Change password' })
-  @ApiBody({ schema: { example: CHANGE_PASSWORD_EXAMPLE } })
+  @ApiBody({
+    schema: { example: CHANGE_PASSWORD_EXAMPLE },
+    type: ChangePasswordDto
+  })
   @ApiResponse({
     status: 200,
     type: String

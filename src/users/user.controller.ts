@@ -24,6 +24,7 @@ import {
   ApiBody,
   ApiExtraModels,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
   getSchemaPath
@@ -82,7 +83,7 @@ export class UsersController {
   } */
 
   @ApiOperation({ summary: 'Get all users in radius' })
-  @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE } })
+  @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE }, type: UserRadiusDto })
   @ApiExtraModels(User)
   @ApiResponse({
     status: 200,
@@ -113,7 +114,10 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Create user' })
-  @ApiBody({ schema: { example: CREATE_USER_EXAMPLE } })
+  @ApiBody({
+    schema: { example: CREATE_USER_EXAMPLE },
+    type: CreateUserDto
+  })
   @ApiExtraModels(User)
   @ApiResponse({
     status: 200,
@@ -130,7 +134,13 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Update user' })
-  @ApiBody({ schema: { example: UPDATE_USER_EXAMPLE } })
+  @ApiBody({
+    schema: {
+      example: UPDATE_USER_EXAMPLE
+    },
+    type: UpdateUserDto
+    //examples: UPDATE_USER_EXAMPLE
+  })
   @ApiExtraModels(User)
   @ApiResponse({
     status: 200,

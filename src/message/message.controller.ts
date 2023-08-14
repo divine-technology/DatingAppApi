@@ -21,7 +21,7 @@ export class MessageController {
 
   @ApiOperation({ summary: 'Send message' })
   @ApiExtraModels(Message)
-  @ApiBody({ schema: { example: SEND_MESSAGE_EXAMPLE } })
+  @ApiBody({ schema: { example: SEND_MESSAGE_EXAMPLE }, type: MessageDto })
   @Post('/send-message/:likeId')
   async sendMessage(
     @Param('likeId') likeId: string,
