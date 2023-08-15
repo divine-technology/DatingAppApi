@@ -7,17 +7,21 @@ import {
   registerDecorator
 } from 'class-validator';
 import { Like } from '../users/user.schema';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ReactWithUserDto {
+  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   likedUserId: string;
 
+  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   @IsMatchStatus()
   status: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   likedPhotoUrl: string;

@@ -307,7 +307,7 @@ export class UsersService {
       throw new ConflictException('Email already exists!');
     } else {
       const hashedPassword = await bcrypt.hash(password, numberOfSalts);
-      const newUser = {
+      const newUser: User = {
         ...user,
         email: lowercaseEmail,
         password: hashedPassword,

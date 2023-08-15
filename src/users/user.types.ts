@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { Message, User } from './user.schema';
-import { PaginateDto } from '../common/pagination.dto';
+import { Location, Message, User } from './user.schema';
+import { PaginateDto, PaginatedRequestDto } from '../common/pagination.dto';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -22,25 +22,29 @@ export class CreateUserDto {
 }
 
 export class UserRadiusDto {
-  location: {
-    type: string;
-    coordinates: [number, number];
-  };
+  @ApiProperty()
+  location: Location;
+  @ApiProperty()
   radius: number;
 }
 
 export class UpdateUserDto {
+  @ApiProperty()
   name: string;
+  @ApiProperty()
   email: string;
+  @ApiProperty()
   password: string;
+  @ApiProperty()
   role: string;
+  @ApiProperty()
   forgotPasswordToken: string;
+  @ApiProperty()
   forgotPasswordTimestamp: string;
+  @ApiProperty()
   createdAccountTimestamp: string;
-  location: {
-    type: string;
-    coordinates: number[];
-  };
+  @ApiProperty()
+  location: Location;
 }
 
 export class UserPaginateDto extends PaginateDto {
@@ -57,3 +61,5 @@ export class UserPaginateDto extends PaginateDto {
   @ApiProperty({ required: false })
   createdAccountTimestamp: string;
 }
+
+export class PaginatedUser extends PaginatedRequestDto(User) {}

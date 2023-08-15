@@ -51,9 +51,9 @@ export class Location {
   @Prop({ type: String, default: 'Point' })
   type: string;
 
-  @ApiProperty()
-  @Prop({ type: [Number], required: true })
-  coordinates: number[];
+  @ApiProperty({ type: Number, isArray: true, required: true })
+  @Prop({ type: Number, isArray: true, required: true })
+  coordinates: [number, number];
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
