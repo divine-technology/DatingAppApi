@@ -1,13 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MessageRepository } from './message.repository';
-import { MessageDto } from '../users/dto/message.dto';
 import { LikeService } from '../like/like.service';
 import { MatchStatus } from '../like/like.types';
-import {
-  PaginateDto,
-  ResponsePaginateDtoMessages
-} from '../users/dto/user.paginate.dto';
 import { Message } from '../users/user.schema';
+import { MessageDto } from './message.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 @Injectable()
 export class MessageService {
@@ -20,7 +17,7 @@ export class MessageService {
     return this.messageRepository.test();
   }
 
-  async sendMessage(likeId: string, messageDto: MessageDto): Promise<void> {
+  async sendMessage(likeId: string, messageDto: MessageDto): Promise<Message> {
     const { from, to, message } = messageDto;
     const doesConversationExist = await this.messageRepository.findMessage(
       likeId
@@ -44,6 +41,7 @@ export class MessageService {
           };
           const test = await this.messageRepository.createMessage(newMessage);
           console.log(test);
+          return test;
         } else {
           throw new UnauthorizedException('Not a picture! / Cannot do that!');
         }
@@ -62,6 +60,7 @@ export class MessageService {
           };
           const test = await this.messageRepository.createMessage(newMessage);
           console.log(test);
+          return test;
         } else {
           throw new UnauthorizedException('Cannot send more than 2 messages!');
         }
@@ -88,6 +87,7 @@ export class MessageService {
             };
             const test = await this.messageRepository.createMessage(newMessage);
             console.log(test);
+            return test;
           } else {
             throw new UnauthorizedException('Not a picture!');
           }
@@ -100,6 +100,7 @@ export class MessageService {
           };
           const test = await this.messageRepository.createMessage(newMessage);
           console.log(test);
+          return test;
         }
       } else {
         throw new UnauthorizedException('3');
@@ -112,7 +113,7 @@ export class MessageService {
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
+  ): Promise<ResponsePaginateDto<Message>> {
     return await this.messageRepository.getConversation(likeId, paginateDto);
   }
 

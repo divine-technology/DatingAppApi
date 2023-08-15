@@ -1,8 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Like, LikeWithId, User } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
-import { PaginateDto } from '../users/dto/user.paginate.dto';
-import { ResponsePaginateDtoLikes } from './like.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 export class LikeRepository {
   constructor(
@@ -27,7 +26,7 @@ export class LikeRepository {
   async getBothLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -36,12 +35,6 @@ export class LikeRepository {
         status: { $in: ['liked_back'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
@@ -54,7 +47,7 @@ export class LikeRepository {
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -63,7 +56,7 @@ export class LikeRepository {
   async getLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -72,12 +65,6 @@ export class LikeRepository {
         status: { $in: ['one_liked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
@@ -90,7 +77,7 @@ export class LikeRepository {
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -99,7 +86,7 @@ export class LikeRepository {
   async getLikeRequests(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -108,12 +95,6 @@ export class LikeRepository {
         status: { $in: ['one_liked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
@@ -126,7 +107,7 @@ export class LikeRepository {
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -135,7 +116,7 @@ export class LikeRepository {
   async getBlocked(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -144,12 +125,6 @@ export class LikeRepository {
         status: { $in: ['blocked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
@@ -162,7 +137,7 @@ export class LikeRepository {
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };

@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { LikeService } from './like.service';
-import { PaginateDto } from '../users/dto/user.paginate.dto';
-import { ReactWithUserDto, ResponsePaginateDtoLikes } from './like.types';
+import { ReactWithUserDto } from './like.types';
 import {
   ApiBody,
   ApiExtraModels,
@@ -13,6 +12,7 @@ import {
 import { Like } from '../users/user.schema';
 import { isArray } from 'class-validator';
 import { REACT_WITH_USER_EXAMPLE } from '../swagger/example';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 @ApiTags('Like')
 @Controller('likes')
@@ -20,76 +20,64 @@ export class LikeController {
   constructor(private readonly likeService: LikeService) {}
 
   @ApiOperation({ summary: 'Get all users that liked the user back' })
-  @ApiExtraModels(Like)
+  @ApiExtraModels(ResponsePaginateDto<Like>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(Like)
-    },
-    isArray: true
+    type: ResponsePaginateDto<Like>
   })
   @Get('/get-both-likes/:id')
   async getBothLikes(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     return await this.likeService.getBothLikes(id, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get all likes from user' })
-  @ApiExtraModels(Like)
+  @ApiExtraModels(ResponsePaginateDto<Like>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(Like)
-    },
-    isArray: true
+    type: ResponsePaginateDto<Like>
   })
   @Get('/get-likes/:id')
   async getLikes(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     return await this.likeService.getLikes(id, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get all like requests' })
-  @ApiExtraModels(Like)
+  @ApiExtraModels(ResponsePaginateDto<Like>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(Like)
-    },
-    isArray: true
+    type: ResponsePaginateDto<Like>
   })
   @Get('/get-like-requests/:id')
   async getLikeRequests(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     return await this.likeService.getLikeRequests(id, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get all users that are blocked' })
-  @ApiExtraModels(Like)
+  @ApiExtraModels(ResponsePaginateDto<Like>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(Like)
-    },
-    isArray: true
+    type: ResponsePaginateDto<Like>
   })
   @Get('/get-blocked/:id')
   async getBlocked(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     return await this.likeService.getBlocked(id, paginateDto);
   }
 
   @ApiOperation({ summary: 'React with a user' })
   @ApiBody({
-    schema: { example: REACT_WITH_USER_EXAMPLE },
+    examples: REACT_WITH_USER_EXAMPLE,
     type: ReactWithUserDto
   })
   @ApiExtraModels(Like)

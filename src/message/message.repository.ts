@@ -1,10 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { FADILMRZITYPESCRIPT, Message } from '../users/user.schema';
 import { Model } from 'mongoose';
-import {
-  PaginateDto,
-  ResponsePaginateDtoMessages
-} from '../users/dto/user.paginate.dto';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 export class MessageRepository {
   constructor(
@@ -36,16 +33,10 @@ export class MessageRepository {
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
+  ): Promise<ResponsePaginateDto<Message>> {
     const { page, limit } = paginateDto;
 
     const count = await this.countMessages(likeId);
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.messageModel
       .find({
@@ -56,7 +47,7 @@ export class MessageRepository {
       .sort({ createdAt: -1 });
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };

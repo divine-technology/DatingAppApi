@@ -7,7 +7,7 @@ import {
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/user.service';
-import { LoginUserDto } from './auth.types';
+import { ForgotPasswordResponseDto, LoginUserDto } from './auth.types';
 import * as bcrypt from 'bcryptjs';
 import { ForgotPasswordDto } from './auth.types';
 import { ChangeForgotPasswordDto } from './auth.types';
@@ -48,7 +48,9 @@ export class AuthService {
     return { token };
   }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<string> {
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto
+  ): Promise<ForgotPasswordResponseDto> {
     const { email } = forgotPasswordDto;
     const conditionArray = [{ email }];
     const fetchedUser = await this.userService.findUserBy(conditionArray);
@@ -65,7 +67,9 @@ export class AuthService {
       timestamp
     });
     const user = await this.userService.findUserBy(conditionArray);
-    return user.forgotPasswordToken;
+    return {
+      forgotPasswordToken: user.forgotPasswordToken
+    };
   }
 
   async updateRecoveryTokenByEmail(

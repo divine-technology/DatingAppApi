@@ -10,19 +10,12 @@ import mongoose, { isValidObjectId } from 'mongoose';
 import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { CreateUserDto } from './dto/create.user.dto';
 import { Roles } from './user.enum';
 import { MailerService } from '../mailer/mailer.service';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UpdateUserDto } from './dto/update.user.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
 import { MatchStatus } from '../like/like.types';
-import { MessageDto } from './dto/message.dto';
+import { CreateUserDto, UserPaginateDto, UserRadiusDto } from './user.types';
+import { MessageDto } from '../message/message.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 export const numberOfSalts = 10;
 
@@ -36,7 +29,7 @@ export class UsersService {
 
   async getAllUsers(
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<User>> {
     //this.mailerService.sendMail();
     const {
       name,
@@ -281,7 +274,7 @@ export class UsersService {
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
+  ): Promise<ResponsePaginateDto<Message>> {
     return await this.userRepository.getConversation(likeId, paginateDto);
   }
 

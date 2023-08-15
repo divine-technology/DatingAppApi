@@ -8,12 +8,6 @@ import {
 } from 'class-validator';
 import { Like } from '../users/user.schema';
 
-export interface ResponsePaginateDtoLikes {
-  pages: number;
-  page: number;
-  data: Like[];
-}
-
 export class ReactWithUserDto {
   @IsNotEmpty()
   @IsString()

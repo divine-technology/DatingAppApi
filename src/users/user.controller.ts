@@ -9,22 +9,11 @@ import {
   Query
 } from '@nestjs/common';
 import { UsersService } from './user.service';
-import { CreateUserDto } from './dto/create.user.dto';
 import { User } from './user.schema';
-import { UpdateUserDto } from './dto/update.user.dto';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
-import { MessageDto } from './dto/message.dto';
 import {
   ApiBody,
   ApiExtraModels,
   ApiOperation,
-  ApiParam,
   ApiResponse,
   ApiTags,
   getSchemaPath
@@ -34,6 +23,14 @@ import {
   UPDATE_USER_EXAMPLE,
   USER_RADIUS_EXAMPLE
 } from '../swagger/example';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserPaginateDto,
+  UserRadiusDto
+} from './user.types';
+import { ResponsePaginateDto } from '../common/pagination.dto';
+import { LoginResponseDto } from '../auth/auth.types';
 
 @ApiTags('User')
 @Controller('users')
@@ -41,18 +38,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Get all users pagination' })
-  @ApiExtraModels(User)
+  @ApiExtraModels(ResponsePaginateDto<User>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    }
+    type: ResponsePaginateDto<User>
   })
   @Get()
   async getAllUsers(
     @Query()
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<User>> {
     return await this.usersService.getAllUsers(paginateDto);
   }
 
@@ -115,31 +110,26 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Create user' })
   @ApiBody({
-    schema: { example: CREATE_USER_EXAMPLE },
+    examples: CREATE_USER_EXAMPLE,
     type: CreateUserDto
   })
   @ApiExtraModels(User)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    }
+    type: LoginResponseDto
   })
   @Post()
   async createUser(
     @Body()
     createUserDto: CreateUserDto
-  ): Promise<{ token: string }> {
+  ): Promise<LoginResponseDto> {
     return await this.usersService.createUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Update user' })
   @ApiBody({
-    schema: {
-      example: UPDATE_USER_EXAMPLE
-    },
+    examples: UPDATE_USER_EXAMPLE,
     type: UpdateUserDto
-    //examples: UPDATE_USER_EXAMPLE
   })
   @ApiExtraModels(User)
   @ApiResponse({

@@ -1,16 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { LikeRepository } from './like.repository';
 import { UsersService } from '../users/user.service';
-import { PaginateDto } from '../users/dto/user.paginate.dto';
 import mongoose from 'mongoose';
 import {
   ReactWithUserDto,
-  ResponsePaginateDtoLikes,
   MatchStatus,
   LikeWithErrorStatus
 } from './like.types';
 import { Like, LikeWithId } from '../users/user.schema';
 import { MessageService } from '../message/message.service';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 @Injectable()
 export class LikeService {
@@ -26,10 +25,10 @@ export class LikeService {
   async getBothLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBothLikes(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
     const page = likes.page;
 
     const newTestArray = [];
@@ -38,7 +37,7 @@ export class LikeService {
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -49,10 +48,11 @@ export class LikeService {
   async getLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikes(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
+
     const page = likes.page;
 
     const newTestArray = [];
@@ -61,7 +61,7 @@ export class LikeService {
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -72,10 +72,11 @@ export class LikeService {
   async getLikeRequests(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikeRequests(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
+
     const page = likes.page;
 
     const newTestArray = [];
@@ -84,7 +85,7 @@ export class LikeService {
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -95,10 +96,11 @@ export class LikeService {
   async getBlocked(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<Like>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBlocked(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
+
     const page = likes.page;
 
     const newTestArray = [];
@@ -107,7 +109,7 @@ export class LikeService {
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -133,7 +135,6 @@ export class LikeService {
       };
 
       like = await this.like(id, likedUserId);
-      console.log('FUCKING LIKE: ', { like });
       if (like.hasErrors) {
         throw new UnauthorizedException('Error with liking');
       } else {

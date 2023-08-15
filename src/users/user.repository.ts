@@ -8,13 +8,8 @@ import {
   UserWithId
 } from './user.schema';
 import mongoose, { Model } from 'mongoose';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
+import { UserPaginateDto, UserRadiusDto } from './user.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 export class UserRepository {
   constructor(
@@ -26,7 +21,7 @@ export class UserRepository {
   async getAllUsers(
     paginateDto: UserPaginateDto,
     whereArray: any[]
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<User>> {
     const { limit, page, sort, sortBy } = paginateDto;
     const whereCondition =
       whereArray.length > 0
@@ -35,13 +30,6 @@ export class UserRepository {
           }
         : {};
     const count = await this.userModel.find(whereCondition).count();
-    let numberOfPages: number;
-
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.userModel
       .find(whereCondition)
@@ -49,7 +37,7 @@ export class UserRepository {
       .limit(limit)
       .skip((page - 1) * limit);
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -109,16 +97,10 @@ export class UserRepository {
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
+  ): Promise<ResponsePaginateDto<Message>> {
     const { page, limit } = paginateDto;
 
     const count = await this.countMessages(likeId);
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.messageModel
       .find({
@@ -129,7 +111,7 @@ export class UserRepository {
       .sort({ createdAt: -1 });
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
