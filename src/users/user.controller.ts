@@ -118,7 +118,7 @@ export class UsersController {
     status: 200,
     type: LoginResponseDto
   })
-  @Post()
+  @Post('/')
   async createUser(
     @Body()
     createUserDto: CreateUserDto

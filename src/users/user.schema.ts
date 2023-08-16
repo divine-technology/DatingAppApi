@@ -52,7 +52,7 @@ export class Location {
   type: string;
 
   @ApiProperty({ type: Number, isArray: true, required: true })
-  @Prop({ type: Number, isArray: true, required: true })
+  @Prop()
   coordinates: [number, number];
 }
 
