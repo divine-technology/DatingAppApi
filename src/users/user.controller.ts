@@ -108,24 +108,6 @@ export class UsersController {
     return await this.usersService.getOneUser(id);
   }
 
-  @ApiOperation({ summary: 'Create user' })
-  @ApiBody({
-    examples: CREATE_USER_EXAMPLE,
-    type: CreateUserDto
-  })
-  @ApiExtraModels(User)
-  @ApiResponse({
-    status: 200,
-    type: LoginResponseDto
-  })
-  @Post('/')
-  async createUser(
-    @Body()
-    createUserDto: CreateUserDto
-  ): Promise<LoginResponseDto> {
-    return await this.usersService.createUser(createUserDto);
-  }
-
   @ApiOperation({ summary: 'Update user' })
   @ApiBody({
     examples: UPDATE_USER_EXAMPLE,

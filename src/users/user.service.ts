@@ -297,35 +297,6 @@ export class UsersService {
     return res;
   }
 
-  async createUser(user: CreateUserDto): Promise<{ token: string }> {
-    const { email, password } = user;
-    const lowercaseEmail = email.toLowerCase();
-    const conditionArray = [];
-    conditionArray.push({ email });
-    const existingUser = await this.userRepository.findBy(conditionArray);
-    if (existingUser != null) {
-      throw new ConflictException('Email already exists!');
-    } else {
-      const hashedPassword = await bcrypt.hash(password, numberOfSalts);
-      const newUser: User = {
-        ...user,
-        email: lowercaseEmail,
-        password: hashedPassword,
-        role: Roles.ADMIN,
-        forgotPasswordToken: null,
-        forgotPasswordTimestamp: null,
-        createdAccountTimestamp: new Date().toISOString(),
-        location: {
-          type: 'Point',
-          coordinates: [43.85643, 18.413029]
-        }
-      };
-      const finalUser = await this.userRepository.createUser(newUser);
-      const token = this.jwtService.sign({ id: finalUser._id });
-      return { token };
-    }
-  }
-
   async getRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
     return await this.userRepository.getUsersWithinRadius(userRadiusDto);
   }

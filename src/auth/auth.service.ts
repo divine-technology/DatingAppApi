@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -6,12 +7,19 @@ import {
 } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/user.service';
-import { ForgotPasswordResponseDto, LoginUserDto } from './auth.types';
+import { UsersService, numberOfSalts } from '../users/user.service';
+import {
+  AuthResponseDto,
+  ForgotPasswordResponseDto,
+  LoginUserDto
+} from './auth.types';
 import * as bcrypt from 'bcryptjs';
 import { ForgotPasswordDto } from './auth.types';
 import { ChangeForgotPasswordDto } from './auth.types';
 import { ChangePasswordDto } from './auth.types';
+import { CreateUserDto } from '../users/user.types';
+import { User } from '../users/user.schema';
+import { Roles } from '../users/user.enum';
 
 export const NUMBER_OF_SALTS = 10;
 
@@ -27,7 +35,7 @@ export class AuthService {
     return await this.authRepository.test();
   }
 
-  async loginUser(user: LoginUserDto): Promise<{ token: string }> {
+  async loginUser(user: LoginUserDto): Promise<AuthResponseDto> {
     const { email, password } = user;
     const conditionArray = [{ email }];
     const fetchedUser = await this.userService.findUserBy(conditionArray);
@@ -45,7 +53,56 @@ export class AuthService {
     }
 
     const token = this.jwtService.sign({ id: fetchedUser._id });
-    return { token };
+    const dataToReturn: AuthResponseDto = {
+      _id: fetchedUser._id,
+      name: fetchedUser.name,
+      email: fetchedUser.email,
+      role: fetchedUser.role,
+      createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
+      location: fetchedUser.location,
+      token: token
+    };
+    return dataToReturn;
+  }
+
+  async createUser(user: CreateUserDto): Promise<AuthResponseDto> {
+    const { email, password } = user;
+    const lowercaseEmail = email.toLowerCase();
+    const conditionArray = [];
+    conditionArray.push({ email });
+    const existingUser = await this.userService.findUserBy(conditionArray);
+    if (existingUser != null) {
+      throw new ConflictException('Email already exists!');
+    } else {
+      const hashedPassword = await bcrypt.hash(password, numberOfSalts);
+      const newUser: User = {
+        ...user,
+        email: lowercaseEmail,
+        password: hashedPassword,
+        role: Roles.ADMIN,
+        forgotPasswordToken: null,
+        forgotPasswordTimestamp: null,
+        createdAccountTimestamp: new Date().toISOString(),
+        location: {
+          type: 'Point',
+          coordinates: [43.85643, 18.413029]
+        }
+      };
+      const finalUser = await this.authRepository.createUser(newUser);
+      const token = this.jwtService.sign({ id: finalUser._id });
+
+      const dataToReturn: AuthResponseDto = {
+        _id: finalUser._id,
+        name: finalUser.name,
+        email: finalUser.email,
+        role: finalUser.role,
+        createdAccountTimeStamp: finalUser.createdAccountTimestamp,
+        location: finalUser.location,
+        token: token
+      };
+
+      return dataToReturn;
+    }
   }
 
   async forgotPassword(

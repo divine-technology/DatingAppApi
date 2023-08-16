@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../users/user.schema';
+import { User, UserWithId } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 
@@ -38,5 +38,9 @@ export class AuthRepository {
       new mongoose.Types.ObjectId(id),
       updatedToken
     );
+  }
+
+  async createUser(user: User): Promise<UserWithId> {
+    return await this.userModel.create(user);
   }
 }

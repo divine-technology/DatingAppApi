@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import mongoose from 'mongoose';
+import { Location } from '../users/user.schema';
 
 export class ChangeForgotPasswordDto {
   @ApiProperty()
@@ -58,6 +60,29 @@ export class LoginUserDto {
 }
 
 export class LoginResponseDto {
+  @ApiProperty()
+  token: string;
+}
+
+export class AuthResponseDto {
+  @ApiProperty()
+  _id: mongoose.Types.ObjectId;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  role: string;
+
+  @ApiProperty()
+  createdAccountTimeStamp: string;
+
+  @ApiProperty()
+  location: Location;
+
   @ApiProperty()
   token: string;
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
+  AuthResponseDto,
   ForgotPasswordResponseDto,
   LoginResponseDto,
   LoginUserDto
@@ -20,9 +21,11 @@ import { User } from '../users/user.schema';
 import {
   CHANGE_FORGOT_PASSWORD_EXAMPLE,
   CHANGE_PASSWORD_EXAMPLE,
+  CREATE_USER_EXAMPLE,
   FORGOT_PASSWORD_EXAMPLE,
   LOGIN_USER_EXAMPLE
 } from '../swagger/example';
+import { CreateUserDto } from '../users/user.types';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -33,14 +36,32 @@ export class AuthController {
   @ApiBody({ examples: LOGIN_USER_EXAMPLE, type: LoginUserDto })
   @ApiResponse({
     status: 200,
-    type: LoginResponseDto
+    type: AuthResponseDto
   })
   @Post('/login')
   async loginUser(
     @Body()
     loginUserDto: LoginUserDto
-  ): Promise<LoginResponseDto> {
+  ): Promise<AuthResponseDto> {
     return await this.authService.loginUser(loginUserDto);
+  }
+
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBody({
+    examples: CREATE_USER_EXAMPLE,
+    type: CreateUserDto
+  })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    type: AuthResponseDto
+  })
+  @Post('/')
+  async createUser(
+    @Body()
+    createUserDto: CreateUserDto
+  ): Promise<AuthResponseDto> {
+    return await this.authService.createUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Forgot password' })
