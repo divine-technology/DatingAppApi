@@ -54,12 +54,14 @@ export class AuthService {
 
     const token = this.jwtService.sign({ id: fetchedUser._id });
     const dataToReturn: AuthResponseDto = {
-      _id: fetchedUser._id,
-      name: fetchedUser.name,
-      email: fetchedUser.email,
-      role: fetchedUser.role,
-      createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
-      location: fetchedUser.location,
+      user: {
+        _id: fetchedUser._id,
+        name: fetchedUser.name,
+        email: fetchedUser.email,
+        role: fetchedUser.role,
+        createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
+        location: fetchedUser.location
+      },
       token: token
     };
     return dataToReturn;
@@ -92,12 +94,14 @@ export class AuthService {
       const token = this.jwtService.sign({ id: finalUser._id });
 
       const dataToReturn: AuthResponseDto = {
-        _id: finalUser._id,
-        name: finalUser.name,
-        email: finalUser.email,
-        role: finalUser.role,
-        createdAccountTimeStamp: finalUser.createdAccountTimestamp,
-        location: finalUser.location,
+        user: {
+          _id: finalUser._id,
+          name: finalUser.name,
+          email: finalUser.email,
+          role: finalUser.role,
+          createdAccountTimeStamp: finalUser.createdAccountTimestamp,
+          location: finalUser.location
+        },
         token: token
       };
 

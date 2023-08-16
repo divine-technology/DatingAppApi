@@ -64,7 +64,7 @@ export class LoginResponseDto {
   token: string;
 }
 
-export class AuthResponseDto {
+export class AuthUser {
   @ApiProperty()
   _id: mongoose.Types.ObjectId;
 
@@ -82,6 +82,11 @@ export class AuthResponseDto {
 
   @ApiProperty()
   location: Location;
+}
+
+export class AuthResponseDto {
+  @ApiProperty()
+  user: AuthUser;
 
   @ApiProperty()
   token: string;
