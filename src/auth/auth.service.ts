@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ExecutionContext,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -10,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService, numberOfSalts } from '../users/user.service';
 import {
   AuthResponseDto,
+  AuthUser,
   ForgotPasswordResponseDto,
   LoginUserDto
 } from './auth.types';
@@ -20,6 +22,7 @@ import { ChangePasswordDto } from './auth.types';
 import { CreateUserDto } from '../users/user.types';
 import { User } from '../users/user.schema';
 import { Roles } from '../users/user.enum';
+import { ContextService } from '../context/context.service';
 
 export const NUMBER_OF_SALTS = 10;
 
@@ -28,7 +31,8 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly userService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private readonly contextService: ContextService
   ) {}
 
   async test() {
@@ -64,6 +68,11 @@ export class AuthService {
       },
       token: token
     };
+    return dataToReturn;
+  }
+
+  async getMe(): Promise<AuthUser> {
+    const dataToReturn = this.contextService.userContext.user;
     return dataToReturn;
   }
 

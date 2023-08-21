@@ -134,7 +134,7 @@ export class UserRepository {
     }
   }
 
-  async getOneUser(id: string): Promise<User> {
+  async getOneUser(id: string): Promise<UserWithId> {
     return await this.userModel.findById(id);
   }
 

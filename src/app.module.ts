@@ -21,6 +21,7 @@ import { LikeService } from './like/like.service';
 import { LikeModule } from './like/like.module';
 import { MessageModule } from './message/message.module';
 import { MessageService } from './message/message.service';
+import { ContextService } from './context/context.service';
 
 @Module({
   imports: [
@@ -55,7 +56,8 @@ import { MessageService } from './message/message.service';
     SchedulerService,
     AuthService,
     LikeService,
-    MessageService
+    MessageService,
+    ContextService
   ]
 })
 export class AppModule {}

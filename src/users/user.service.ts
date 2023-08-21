@@ -286,7 +286,7 @@ export class UsersService {
     return await this.userRepository.getPhotoLinks(whereArray);
   }
 
-  async getOneUser(id: string): Promise<User> {
+  async getOneUser(id: string): Promise<UserWithId> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid id parameter');
     }

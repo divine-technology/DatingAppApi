@@ -1,7 +1,8 @@
-import { Body, Controller, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   AuthResponseDto,
+  AuthUser,
   ForgotPasswordResponseDto,
   LoginResponseDto,
   LoginUserDto
@@ -26,6 +27,8 @@ import {
   LOGIN_USER_EXAMPLE
 } from '../swagger/example';
 import { CreateUserDto } from '../users/user.types';
+import { Auth } from '../middleware/auth.decorator';
+import { Roles } from '../users/user.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -44,6 +47,17 @@ export class AuthController {
     loginUserDto: LoginUserDto
   ): Promise<AuthResponseDto> {
     return await this.authService.loginUser(loginUserDto);
+  }
+
+  @Auth(Roles.ADMIN)
+  @ApiResponse({
+    status: 200,
+    type: AuthUser
+  })
+  @ApiOperation({ summary: 'Get me' })
+  @Get('/get-me')
+  async getMe(): Promise<AuthUser> {
+    return await this.authService.getMe();
   }
 
   @ApiOperation({ summary: 'Create user' })
