@@ -26,7 +26,11 @@ export class SchedulerService {
       forgotPasswordTimestamp: new Date(
         timeFiveMinutesAgo.setMinutes(timeFiveMinutesAgo.getMinutes() - 5)
       ).toISOString(),
-      createdAccountTimestamp: null
+      createdAccountTimestamp: null,
+      gender: null,
+      preference: null,
+      age: null,
+      hobbies: null
     };
     console.log('Scheduler radi');
     const users = await this.userService.getAllUsers(test);

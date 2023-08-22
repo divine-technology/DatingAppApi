@@ -64,7 +64,12 @@ export class AuthService {
         email: fetchedUser.email,
         role: fetchedUser.role,
         createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
-        location: fetchedUser.location
+        location: fetchedUser.location,
+        gender: fetchedUser.gender,
+        preference: fetchedUser.preference,
+        age: fetchedUser.age,
+        bio: fetchedUser.bio,
+        hobbies: fetchedUser.hobbies
       },
       token: token
     };
@@ -97,7 +102,12 @@ export class AuthService {
         location: {
           type: 'Point',
           coordinates: [43.85643, 18.413029]
-        }
+        },
+        gender: null,
+        preference: null,
+        age: null,
+        bio: null,
+        hobbies: null
       };
       const finalUser = await this.authRepository.createUser(newUser);
       const token = this.jwtService.sign({ id: finalUser._id });
@@ -109,7 +119,12 @@ export class AuthService {
           email: finalUser.email,
           role: finalUser.role,
           createdAccountTimeStamp: finalUser.createdAccountTimestamp,
-          location: finalUser.location
+          location: finalUser.location,
+          gender: finalUser.gender,
+          preference: finalUser.preference,
+          age: finalUser.age,
+          bio: finalUser.bio,
+          hobbies: finalUser.hobbies
         },
         token: token
       };

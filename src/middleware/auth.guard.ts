@@ -61,7 +61,12 @@ export class AuthGuard implements CanActivate {
           email: user.email,
           role: user.role,
           createdAccountTimeStamp: user.createdAccountTimestamp,
-          location: user.location
+          location: user.location,
+          gender: user.gender,
+          preference: user.preference,
+          age: user.age,
+          bio: user.bio,
+          hobbies: user.hobbies
         };
         return dataToReturn;
       } catch (error) {

@@ -37,7 +37,11 @@ export class UsersService {
       role,
       forgotPasswordToken,
       forgotPasswordTimestamp,
-      createdAccountTimestamp
+      createdAccountTimestamp,
+      gender,
+      preference,
+      age,
+      hobbies
     } = paginateDto;
     const whereArray = [];
     if (email) {
@@ -60,6 +64,26 @@ export class UsersService {
       });
     }
     if (createdAccountTimestamp) {
+      whereArray.push({
+        createdAccountTimestamp: createdAccountTimestamp
+      });
+    }
+    if (gender) {
+      whereArray.push({
+        gender: gender
+      });
+    }
+    if (preference) {
+      whereArray.push({
+        preference: preference
+      });
+    }
+    if (age) {
+      whereArray.push({
+        age: age
+      });
+    }
+    if (hobbies) {
       whereArray.push({
         createdAccountTimestamp: createdAccountTimestamp
       });

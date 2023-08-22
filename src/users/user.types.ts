@@ -45,6 +45,16 @@ export class UpdateUserDto {
   createdAccountTimestamp: string;
   @ApiProperty()
   location: Location;
+  @ApiProperty()
+  gender: string;
+  @ApiProperty()
+  preference: string;
+  @ApiProperty()
+  age: number;
+  @ApiProperty()
+  bio: string;
+  @ApiProperty()
+  hobbies: string[];
 }
 
 export class UserPaginateDto extends PaginateDto {
@@ -60,6 +70,14 @@ export class UserPaginateDto extends PaginateDto {
   forgotPasswordTimestamp: string;
   @ApiProperty({ required: false })
   createdAccountTimestamp: string;
+  @ApiProperty({ required: false })
+  gender: string;
+  @ApiProperty({ required: false })
+  preference: string;
+  @ApiProperty({ required: false })
+  age: number;
+  @ApiProperty({ required: false })
+  hobbies: string[];
 }
 
 export class PaginatedUser extends PaginatedRequestDto(User) {}

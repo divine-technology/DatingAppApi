@@ -82,6 +82,21 @@ export class AuthUser {
 
   @ApiProperty()
   location: Location;
+
+  @ApiProperty()
+  gender: string;
+
+  @ApiProperty()
+  preference: string;
+
+  @ApiProperty()
+  age: number;
+
+  @ApiProperty()
+  bio: string;
+
+  @ApiProperty()
+  hobbies: string[];
 }
 
 export class AuthResponseDto {

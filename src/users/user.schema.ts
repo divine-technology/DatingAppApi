@@ -90,6 +90,26 @@ export class User {
   @ApiProperty()
   @Prop({ type: LocationSchema, index: '2dsphere' })
   location: Location;
+
+  @ApiProperty()
+  @Prop()
+  gender: string;
+
+  @ApiProperty()
+  @Prop()
+  preference: string;
+
+  @ApiProperty()
+  @Prop()
+  age: number;
+
+  @ApiProperty()
+  @Prop()
+  bio: string;
+
+  @ApiProperty()
+  @Prop()
+  hobbies: string[];
 }
 
 export class UserWithId extends User {
