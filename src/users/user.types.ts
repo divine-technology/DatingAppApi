@@ -29,31 +29,31 @@ export class UserRadiusDto {
 }
 
 export class UpdateUserDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   name: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   email: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   password: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   role: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   forgotPasswordToken: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   forgotPasswordTimestamp: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   createdAccountTimestamp: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   location: Location;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   gender: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   preference: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   age: number;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   bio: string;
-  @ApiProperty()
+  @ApiProperty({ required: false })
   hobbies: string[];
 }
 
