@@ -57,7 +57,8 @@ export class AuthGuard implements CanActivate {
 
         const dataToReturn: AuthUser = {
           _id: user._id,
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           role: user.role,
           createdAccountTimeStamp: user.createdAccountTimestamp,

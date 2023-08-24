@@ -11,7 +11,8 @@ export const USER_RADIUS_EXAMPLE = {
 export const CREATE_USER_EXAMPLE = {
   example1: {
     value: {
-      name: 'John Doe',
+      firstName: 'John',
+      lastName: 'Doe',
       email: 'john@gmail.com',
       password: 'test123'
     }
@@ -21,7 +22,8 @@ export const CREATE_USER_EXAMPLE = {
 export const UPDATE_USER_EXAMPLE = {
   example1: {
     value: {
-      name: 'John Doe',
+      firstName: 'John',
+      lastName: 'Doe',
       email: 'john@gmail.com',
       password: 'test123',
       role: 'Admin',

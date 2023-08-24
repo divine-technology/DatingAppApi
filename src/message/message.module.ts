@@ -19,6 +19,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerService } from '../mailer/mailer.service';
+import { ContextService } from '../context/context.service';
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { MailerService } from '../mailer/mailer.service';
     LikeRepository,
     UsersService,
     UserRepository,
-    MailerService
+    MailerService,
+    ContextService
   ],
   exports: [MessageRepository]
 })

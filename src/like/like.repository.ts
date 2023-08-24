@@ -41,7 +41,7 @@ export class LikeRepository {
         users: { $in: id },
         status: { $in: ['liked_back'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -71,7 +71,7 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -101,7 +101,7 @@ export class LikeRepository {
         'users.1': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -131,7 +131,7 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['blocked'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);

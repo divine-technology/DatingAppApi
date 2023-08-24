@@ -16,6 +16,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '../mailer/mailer.module';
 import { MailerService } from '../mailer/mailer.service';
+import { ContextService } from '../context/context.service';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { MailerService } from '../mailer/mailer.service';
     MailerModule
   ],
   controllers: [UsersController],
-  providers: [UsersService, UserRepository, MailerService],
+  providers: [UsersService, UserRepository, MailerService, ContextService],
   exports: [UserRepository]
 })
 export class UsersModule {}

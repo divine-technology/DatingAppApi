@@ -7,7 +7,12 @@ export class CreateUserDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  name: string;
+  firstName: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  lastName: string;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -30,7 +35,9 @@ export class UserRadiusDto {
 
 export class UpdateUserDto {
   @ApiProperty({ required: false })
-  name: string;
+  firstName: string;
+  @ApiProperty({ required: false })
+  lastName: string;
   @ApiProperty({ required: false })
   email: string;
   @ApiProperty({ required: false })
@@ -59,7 +66,9 @@ export class UpdateUserDto {
 
 export class UserPaginateDto extends PaginateDto {
   @ApiProperty({ required: false })
-  name: string;
+  firstName: string;
+  @ApiProperty({ required: false })
+  lastName: string;
   @ApiProperty({ required: false })
   email: string;
   @ApiProperty({ required: false })

@@ -19,6 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerService } from '../mailer/mailer.service';
 import { MessageService } from '../message/message.service';
 import { MessageRepository } from '../message/message.repository';
+import { ContextService } from '../context/context.service';
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { MessageRepository } from '../message/message.repository';
     UserRepository,
     MailerService,
     MessageRepository,
-    MessageService
+    MessageService,
+    ContextService
   ],
   exports: [LikeRepository]
 })

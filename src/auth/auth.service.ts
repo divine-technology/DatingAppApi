@@ -60,7 +60,8 @@ export class AuthService {
     const dataToReturn: AuthResponseDto = {
       user: {
         _id: fetchedUser._id,
-        name: fetchedUser.name,
+        firstName: fetchedUser.firstName,
+        lastName: fetchedUser.lastName,
         email: fetchedUser.email,
         role: fetchedUser.role,
         createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
@@ -115,7 +116,8 @@ export class AuthService {
       const dataToReturn: AuthResponseDto = {
         user: {
           _id: finalUser._id,
-          name: finalUser.name,
+          firstName: finalUser.firstName,
+          lastName: finalUser.lastName,
           email: finalUser.email,
           role: finalUser.role,
           createdAccountTimeStamp: finalUser.createdAccountTimestamp,

@@ -69,7 +69,10 @@ export class AuthUser {
   _id: mongoose.Types.ObjectId;
 
   @ApiProperty()
-  name: string;
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
 
   @ApiProperty()
   email: string;

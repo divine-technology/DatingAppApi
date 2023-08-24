@@ -61,7 +61,11 @@ export const LocationSchema = SchemaFactory.createForClass(Location);
 export class User {
   @ApiProperty()
   @Prop()
-  name: string;
+  firstName: string;
+
+  @ApiProperty()
+  @Prop()
+  lastName: string;
 
   @ApiProperty()
   @Prop()

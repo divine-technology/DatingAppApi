@@ -16,6 +16,7 @@ import { MatchStatus } from '../like/like.types';
 import { CreateUserDto, UserPaginateDto, UserRadiusDto } from './user.types';
 import { MessageDto } from '../message/message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { ContextService } from '../context/context.service';
 
 export const numberOfSalts = 10;
 
@@ -23,6 +24,7 @@ export const numberOfSalts = 10;
 export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly contextService: ContextService,
     private jwtService: JwtService,
     private mailerService: MailerService
   ) {}
@@ -32,7 +34,8 @@ export class UsersService {
   ): Promise<ResponsePaginateDto<User>> {
     //this.mailerService.sendMail();
     const {
-      name,
+      firstName,
+      lastName,
       email,
       role,
       forgotPasswordToken,
@@ -47,8 +50,11 @@ export class UsersService {
     if (email) {
       whereArray.push({ email: { $regex: '.*' + email + '.*' } });
     }
-    if (name) {
-      whereArray.push({ name: { $regex: '.*' + name + '.*' } });
+    if (firstName) {
+      whereArray.push({ firstName: { $regex: '.*' + firstName + '.*' } });
+    }
+    if (lastName) {
+      whereArray.push({ lastName: { $regex: '.*' + lastName + '.*' } });
     }
     if (role) {
       whereArray.push({ role: role });
@@ -322,7 +328,11 @@ export class UsersService {
   }
 
   async getRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
-    return await this.userRepository.getUsersWithinRadius(userRadiusDto);
+    const { _id } = this.contextService.userContext.user;
+    return await this.userRepository.getUsersWithinRadius(
+      userRadiusDto,
+      _id.toString()
+    );
   }
 
   async findUserBy(conditionArray: any[]): Promise<UserWithId> {

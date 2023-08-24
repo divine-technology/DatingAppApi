@@ -31,6 +31,8 @@ import {
 } from './user.types';
 import { ResponsePaginateDto } from '../common/pagination.dto';
 import { LoginResponseDto } from '../auth/auth.types';
+import { Roles } from './user.enum';
+import { Auth } from '../middleware/auth.decorator';
 
 @ApiTags('User')
 @Controller('users')
@@ -77,6 +79,7 @@ export class UsersController {
     return await this.usersService.getAllForLikes(id);
   } */
 
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all users in radius' })
   @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE }, type: UserRadiusDto })
   @ApiExtraModels(User)

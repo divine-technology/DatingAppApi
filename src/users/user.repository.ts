@@ -157,10 +157,13 @@ export class UserRepository {
     return await this.userModel.findByIdAndDelete(id);
   }
 
-  async getUsersWithinRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
+  async getUsersWithinRadius(
+    userRadiusDto: UserRadiusDto,
+    myId: string
+  ): Promise<User[]> {
     const { location, radius } = userRadiusDto;
 
-    const users = await this.userModel.aggregate([
+    const users = await this.userModel.aggregate<UserWithId>([
       {
         $geoNear: {
           near: { type: 'Point', coordinates: location.coordinates },
@@ -171,6 +174,6 @@ export class UserRepository {
       }
     ]);
 
-    return users;
+    return users.filter((user) => user._id.toString() !== myId);
   }
 }
