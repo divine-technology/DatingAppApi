@@ -9,7 +9,7 @@ import {
   Query
 } from '@nestjs/common';
 import { UsersService } from './user.service';
-import { User } from './user.schema';
+import { User, UserWithId } from './user.schema';
 import {
   ApiBody,
   ApiExtraModels,
@@ -82,19 +82,17 @@ export class UsersController {
   @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all users in radius' })
   @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE }, type: UserRadiusDto })
-  @ApiExtraModels(User)
+  @ApiExtraModels(UserWithId)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    },
+    type: UserWithId,
     isArray: true
   })
   @Post('/radius')
   async getRadius(
     @Body()
     userRadiusDto: UserRadiusDto
-  ): Promise<User[]> {
+  ): Promise<UserWithId[]> {
     return await this.usersService.getRadius(userRadiusDto);
   }
 

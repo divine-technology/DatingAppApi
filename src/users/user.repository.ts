@@ -160,7 +160,7 @@ export class UserRepository {
   async getUsersWithinRadius(
     userRadiusDto: UserRadiusDto,
     myId: string
-  ): Promise<User[]> {
+  ): Promise<UserWithId[]> {
     const { location, radius } = userRadiusDto;
 
     const users = await this.userModel.aggregate<UserWithId>([

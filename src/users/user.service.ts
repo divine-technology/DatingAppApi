@@ -327,7 +327,7 @@ export class UsersService {
     return res;
   }
 
-  async getRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
+  async getRadius(userRadiusDto: UserRadiusDto): Promise<UserWithId[]> {
     const { _id } = this.contextService.userContext.user;
     return await this.userRepository.getUsersWithinRadius(
       userRadiusDto,
