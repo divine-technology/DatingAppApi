@@ -17,6 +17,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '../mailer/mailer.module';
 import { MailerService } from '../mailer/mailer.service';
 import { ContextService } from '../context/context.service';
+import { LikeService } from '../like/like.service';
+import { LikeRepository } from '../like/like.repository';
 
 @Module({
   imports: [
@@ -39,7 +41,14 @@ import { ContextService } from '../context/context.service';
     MailerModule
   ],
   controllers: [UsersController],
-  providers: [UsersService, UserRepository, MailerService, ContextService],
+  providers: [
+    UsersService,
+    UserRepository,
+    MailerService,
+    ContextService,
+    LikeService,
+    LikeRepository
+  ],
   exports: [UserRepository]
 })
 export class UsersModule {}

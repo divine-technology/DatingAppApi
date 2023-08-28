@@ -27,9 +27,10 @@ import {
   CreateUserDto,
   UpdateUserDto,
   UserPaginateDto,
-  UserRadiusDto
+  UserRadiusDto,
+  UserResponse
 } from './user.types';
-import { ResponsePaginateDto } from '../common/pagination.dto';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { LoginResponseDto } from '../auth/auth.types';
 import { Roles } from './user.enum';
 import { Auth } from '../middleware/auth.decorator';
@@ -40,16 +41,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Get all users pagination' })
-  @ApiExtraModels(ResponsePaginateDto<User>)
+  @ApiExtraModels(ResponsePaginateDto<UserWithId>)
   @ApiResponse({
     status: 200,
-    type: ResponsePaginateDto<User>
+    type: ResponsePaginateDto<UserWithId>
   })
   @Get()
   async getAllUsers(
     @Query()
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto<User>> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     return await this.usersService.getAllUsers(paginateDto);
   }
 
@@ -82,18 +83,18 @@ export class UsersController {
   @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all users in radius' })
   @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE }, type: UserRadiusDto })
-  @ApiExtraModels(UserWithId)
+  @ApiExtraModels(ResponsePaginateDto<UserResponse>)
   @ApiResponse({
     status: 200,
-    type: UserWithId,
-    isArray: true
+    type: ResponsePaginateDto<UserResponse>
   })
   @Post('/radius')
   async getRadius(
     @Body()
-    userRadiusDto: UserRadiusDto
-  ): Promise<UserWithId[]> {
-    return await this.usersService.getRadius(userRadiusDto);
+    userRadiusDto: UserRadiusDto,
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<UserResponse>> {
+    return await this.usersService.getRadius(userRadiusDto, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get user by id' })

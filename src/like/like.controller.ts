@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { LikeService } from './like.service';
-import { ReactWithUserDto } from './like.types';
+import { LikeResponseDto, ReactWithUserDto } from './like.types';
 import {
   ApiBody,
   ApiExtraModels,
@@ -29,7 +29,7 @@ export class LikeController {
   async getBothLikes(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     return await this.likeService.getBothLikes(id, paginateDto);
   }
 
@@ -43,8 +43,22 @@ export class LikeController {
   async getLikes(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     return await this.likeService.getLikes(id, paginateDto);
+  }
+
+  @ApiOperation({ summary: 'Get all dislikes from user' })
+  @ApiExtraModels(ResponsePaginateDto<Like>)
+  @ApiResponse({
+    status: 200,
+    type: ResponsePaginateDto<Like>
+  })
+  @Get('/get-dislikes/:id')
+  async getDislikes(
+    @Param('id') id: string,
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    return await this.likeService.getDislikes(id, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get all like requests' })
@@ -71,7 +85,7 @@ export class LikeController {
   async getBlocked(
     @Param('id') id: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     return await this.likeService.getBlocked(id, paginateDto);
   }
 

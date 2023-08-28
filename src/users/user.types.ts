@@ -66,6 +66,8 @@ export class UpdateUserDto {
 
 export class UserPaginateDto extends PaginateDto {
   @ApiProperty({ required: false })
+  _id: string;
+  @ApiProperty({ required: false })
   firstName: string;
   @ApiProperty({ required: false })
   lastName: string;
@@ -86,6 +88,27 @@ export class UserPaginateDto extends PaginateDto {
   @ApiProperty({ required: false })
   age: number;
   @ApiProperty({ required: false })
+  hobbies: string[];
+}
+
+export class UserResponse {
+  @ApiProperty()
+  _id: string;
+  @ApiProperty()
+  firstName: string;
+  @ApiProperty()
+  lastName: string;
+  @ApiProperty()
+  email: string;
+  @ApiProperty()
+  role: string;
+  @ApiProperty()
+  gender: string;
+  @ApiProperty()
+  preference: string;
+  @ApiProperty()
+  age: number;
+  @ApiProperty()
   hobbies: string[];
 }
 

@@ -8,8 +8,9 @@ import {
   UserWithId
 } from './user.schema';
 import mongoose, { Model } from 'mongoose';
-import { UserPaginateDto, UserRadiusDto } from './user.types';
+import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { AuthUser } from '../auth/auth.types';
 
 export class UserRepository {
   constructor(
@@ -21,7 +22,7 @@ export class UserRepository {
   async getAllUsers(
     paginateDto: UserPaginateDto,
     whereArray: any[]
-  ): Promise<ResponsePaginateDto<User>> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     const { limit, page, sort, sortBy } = paginateDto;
     const whereCondition =
       whereArray.length > 0
@@ -159,11 +160,14 @@ export class UserRepository {
 
   async getUsersWithinRadius(
     userRadiusDto: UserRadiusDto,
-    myId: string
-  ): Promise<UserWithId[]> {
+    myUser: AuthUser,
+    paginateDto: PaginateDto,
+    arrayOfIds: string[]
+  ): Promise<ResponsePaginateDto<UserResponse>> {
     const { location, radius } = userRadiusDto;
+    const { page = 1, limit = 100, sort = 1, sortBy = '_id' } = paginateDto;
 
-    const users = await this.userModel.aggregate<UserWithId>([
+    const aggregationPipeline: any[] = [
       {
         $geoNear: {
           near: { type: 'Point', coordinates: location.coordinates },
@@ -171,9 +175,52 @@ export class UserRepository {
           maxDistance: radius,
           spherical: true
         }
+      },
+      {
+        $match: {
+          _id: {
+            $nin: [...arrayOfIds, myUser._id]
+          },
+          $and: [{ preference: myUser.gender }, { gender: myUser.preference }]
+        }
+      },
+      {
+        $sort: { [`${sortBy}`]: Number(sort) === 1 ? 1 : -1 }
+      },
+      {
+        $facet: {
+          paginatedUsers: [
+            { $skip: (Number(page) - 1) * Number(limit) },
+            { $limit: Number(limit) }
+          ],
+          totalCount: [{ $count: 'count' }]
+        }
       }
-    ]);
+    ];
 
-    return users.filter((user) => user._id.toString() !== myId);
+    const result = await this.userModel.aggregate(aggregationPipeline);
+
+    const paginatedUsers: UserResponse[] =
+      result[0]?.paginatedUsers.map((user: UserWithId) => {
+        const userResponse: UserResponse = {
+          _id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          gender: user.gender,
+          preference: user.preference,
+          age: user.age,
+          hobbies: user.hobbies
+        };
+        return userResponse;
+      }) || [];
+    const totalCount = result[0]?.totalCount[0]?.count || 0;
+
+    return {
+      count: totalCount,
+      page: limit < 1 ? 1 : Number(page),
+      data: paginatedUsers
+    };
   }
 }

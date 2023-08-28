@@ -1,11 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  forwardRef
+} from '@nestjs/common';
 import { LikeRepository } from './like.repository';
 import { UsersService } from '../users/user.service';
 import mongoose from 'mongoose';
 import {
   ReactWithUserDto,
   MatchStatus,
-  LikeWithErrorStatus
+  LikeWithErrorStatus,
+  LikeResponseDto
 } from './like.types';
 import { Like, LikeWithId } from '../users/user.schema';
 import { MessageService } from '../message/message.service';
@@ -15,6 +21,7 @@ import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService //private readonly messageService: MessageService
   ) {}
 
@@ -25,7 +32,7 @@ export class LikeService {
   async getBothLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBothLikes(newId, paginateDto);
     const count = likes.count;
@@ -33,7 +40,7 @@ export class LikeService {
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({ user: item.users[1], status: item.status });
     });
 
     const dataToReturn = {
@@ -48,7 +55,7 @@ export class LikeService {
   async getLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikes(newId, paginateDto);
     const count = likes.count;
@@ -57,7 +64,31 @@ export class LikeService {
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({ user: item.users[1], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getDislikes(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const dislikes = await this.likeRepository.getDislikes(newId, paginateDto);
+    const count = dislikes.count;
+
+    const page = dislikes.page;
+
+    const newTestArray = [];
+    dislikes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[1], status: item.status });
     });
 
     const dataToReturn = {
@@ -96,7 +127,7 @@ export class LikeService {
   async getBlocked(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBlocked(newId, paginateDto);
     const count = likes.count;
@@ -105,7 +136,79 @@ export class LikeService {
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({ user: item.users[1], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getBlockedBack(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getBlockedBack(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[1], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getBlockedBy(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getBlockedBy(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[0], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getDislikedBy(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getDislikedBy(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[0], status: item.status });
     });
 
     const dataToReturn = {

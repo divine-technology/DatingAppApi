@@ -41,7 +41,7 @@ export class LikeRepository {
         users: { $in: id },
         status: { $in: ['liked_back'] }
       })
-      .populate('users', 'firstName lastName email')
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -71,7 +71,67 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'firstName lastName email')
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getDislikes(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['disliked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['disliked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getDislikedBy(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['disliked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['disliked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -101,7 +161,7 @@ export class LikeRepository {
         'users.1': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'firstName lastName email')
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -131,7 +191,67 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['blocked'] }
       })
-      .populate('users', 'firstName lastName email')
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getBlockedBack(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['blocked_back'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['blocked_back'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getBlockedBy(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['blocked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['blocked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);

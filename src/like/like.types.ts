@@ -6,7 +6,7 @@ import {
   ValidationOptions,
   registerDecorator
 } from 'class-validator';
-import { Like } from '../users/user.schema';
+import { Like, User, UserWithId } from '../users/user.schema';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ReactWithUserDto {
@@ -25,6 +25,13 @@ export class ReactWithUserDto {
   @IsOptional()
   @IsString()
   likedPhotoUrl: string;
+}
+
+export class LikeResponseDto {
+  @ApiProperty()
+  user: Partial<UserWithId>;
+  @ApiProperty()
+  status: string;
 }
 
 export function IsMatchStatus(validationOptions?: ValidationOptions) {

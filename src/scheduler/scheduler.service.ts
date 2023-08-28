@@ -19,6 +19,7 @@ export class SchedulerService {
       page: 1,
       sort: -1,
       sortBy: 'forgotPasswordTimestamp',
+      _id: null,
       firstName: null,
       lastName: null,
       email: null,

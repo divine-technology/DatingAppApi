@@ -1,9 +1,11 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
-  UnauthorizedException
+  UnauthorizedException,
+  forwardRef
 } from '@nestjs/common';
 import { Like, LikeWithId, Message, User, UserWithId } from './user.schema';
 import mongoose, { isValidObjectId } from 'mongoose';
@@ -13,10 +15,16 @@ import * as bcrypt from 'bcryptjs';
 import { Roles } from './user.enum';
 import { MailerService } from '../mailer/mailer.service';
 import { MatchStatus } from '../like/like.types';
-import { CreateUserDto, UserPaginateDto, UserRadiusDto } from './user.types';
+import {
+  CreateUserDto,
+  UserPaginateDto,
+  UserRadiusDto,
+  UserResponse
+} from './user.types';
 import { MessageDto } from '../message/message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
+import { LikeService } from '../like/like.service';
 
 export const numberOfSalts = 10;
 
@@ -25,13 +33,15 @@ export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly contextService: ContextService,
+    @Inject(forwardRef(() => LikeService))
+    private readonly likeService: LikeService,
     private jwtService: JwtService,
     private mailerService: MailerService
   ) {}
 
   async getAllUsers(
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto<User>> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     //this.mailerService.sendMail();
     const {
       firstName,
@@ -327,11 +337,97 @@ export class UsersService {
     return res;
   }
 
-  async getRadius(userRadiusDto: UserRadiusDto): Promise<UserWithId[]> {
-    const { _id } = this.contextService.userContext.user;
+  async getRadius(
+    userRadiusDto: UserRadiusDto,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<UserResponse>> {
+    const myUser = this.contextService.userContext.user;
+    const myLikes = await this.likeService.getLikes(myUser._id.toString(), {
+      page: 0,
+      limit: 0,
+      sort: 1,
+      sortBy: '_id'
+    });
+    const myDislikes = await this.likeService.getDislikes(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBothLikes = await this.likeService.getBothLikes(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBlocks = await this.likeService.getBlocked(myUser._id.toString(), {
+      page: 0,
+      limit: 0,
+      sort: 1,
+      sortBy: '_id'
+    });
+    const myBlocksBack = await this.likeService.getBlockedBack(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBlocksBy = await this.likeService.getBlockedBy(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myDislikedBy = await this.likeService.getDislikedBy(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+
+    const arrayOfIds: string[] = [];
+    myBlocksBy.data.forEach((block) =>
+      arrayOfIds.push(block.user._id.toString())
+    );
+    myDislikedBy.data.forEach((dislike) =>
+      arrayOfIds.push(dislike.user._id.toString())
+    );
+    myBlocksBack.data.forEach((blockBack) =>
+      arrayOfIds.push(blockBack.user._id.toString())
+    );
+    myBlocks.data.forEach((myBlock) =>
+      arrayOfIds.push(myBlock.user._id.toString())
+    );
+    myBothLikes.data.forEach((myBothLike) =>
+      arrayOfIds.push(myBothLike.user._id.toString())
+    );
+    myDislikes.data.forEach((myDislike) =>
+      arrayOfIds.push(myDislike.user._id.toString())
+    );
+    myLikes.data.forEach((myLike) =>
+      arrayOfIds.push(myLike.user._id.toString())
+    );
+
     return await this.userRepository.getUsersWithinRadius(
       userRadiusDto,
-      _id.toString()
+      myUser,
+      paginateDto,
+      arrayOfIds
     );
   }
 

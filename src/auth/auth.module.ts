@@ -18,6 +18,8 @@ import { UsersService } from '../users/user.service';
 import { UserRepository } from '../users/user.repository';
 import { MailerService } from '../mailer/mailer.service';
 import { ContextService } from '../context/context.service';
+import { LikeService } from '../like/like.service';
+import { LikeRepository } from '../like/like.repository';
 
 @Module({
   imports: [
@@ -43,8 +45,10 @@ import { ContextService } from '../context/context.service';
     AuthRepository,
     AuthService,
     UsersService,
+    LikeService,
     ContextService,
     UserRepository,
+    LikeRepository,
     MailerService
   ],
   exports: [AuthRepository]
