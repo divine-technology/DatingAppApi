@@ -53,6 +53,82 @@ export class MessageRepository {
     };
   }
 
+  async getChats(
+    userId: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Message>> {
+    const { page = 1, limit = 10 } = paginateDto;
+
+    const latestMessages = await this.messageModel.aggregate([
+      {
+        $match: {
+          $or: [{ from: userId }, { to: userId }]
+        }
+      },
+      {
+        $addFields: {
+          participants: {
+            $setUnion: [
+              [{ $cond: [{ $eq: ['$from', userId] }, '$to', '$from'] }],
+              [userId]
+            ]
+          }
+        }
+      },
+      {
+        $sort: {
+          createdAt: -1
+        }
+      },
+      {
+        $group: {
+          _id: '$participants',
+          latestMessage: { $first: '$$ROOT' }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$latestMessage' }
+      },
+      {
+        $skip: (Number(page) - 1) * Number(limit)
+      },
+      {
+        $limit: Number(limit)
+      }
+    ]);
+
+    const conversationCount = await this.messageModel.aggregate([
+      {
+        $match: {
+          $or: [{ from: userId }, { to: userId }]
+        }
+      },
+      {
+        $group: {
+          _id: {
+            from: '$from',
+            to: '$to'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const totalCount =
+      conversationCount.length > 0 ? conversationCount[0].count : 0;
+
+    return {
+      count: totalCount,
+      page: limit < 1 ? 1 : Number(page),
+      data: latestMessages
+    };
+  }
+
   async getPhotoLinks(whereArray: any[]): Promise<Message[]> {
     return await this.messageModel
       .find({

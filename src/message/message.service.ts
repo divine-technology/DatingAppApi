@@ -5,12 +5,14 @@ import { MatchStatus } from '../like/like.types';
 import { Message } from '../users/user.schema';
 import { MessageDto } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { ContextService } from '../context/context.service';
 
 @Injectable()
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
-    private readonly likeService: LikeService
+    private readonly likeService: LikeService,
+    private readonly contextService: ContextService
   ) {}
 
   test() {
@@ -115,6 +117,13 @@ export class MessageService {
     paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<Message>> {
     return await this.messageRepository.getConversation(likeId, paginateDto);
+  }
+
+  async getChats(
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Message>> {
+    const userId = this.contextService.userContext.user._id.toString();
+    return await this.messageRepository.getChats(userId, paginateDto);
   }
 
   async deleteMessages(likeId: string): Promise<string> {

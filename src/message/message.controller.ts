@@ -11,6 +11,8 @@ import { Message } from '../users/user.schema';
 import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
 import { MessageDto } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { Roles } from '../users/user.enum';
+import { Auth } from '../middleware/auth.decorator';
 
 @ApiTags('Message')
 @Controller('message')
@@ -44,5 +46,19 @@ export class MessageController {
     @Query() paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<Message>> {
     return await this.messageService.getConversation(likeId, paginateDto);
+  }
+
+  @Auth(Roles.ADMIN)
+  @ApiOperation({ summary: 'Get all chats that a user has' })
+  /* @ApiExtraModels(ResponsePaginateDto<Message>)
+  @ApiResponse({
+    status: 200,
+    type: ResponsePaginateDto<Message>
+  }) */
+  @Get('/get-chats')
+  async getChat(
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Message>> {
+    return await this.messageService.getChats(paginateDto);
   }
 }

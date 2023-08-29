@@ -98,15 +98,15 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Get user by id' })
-  @ApiExtraModels(User)
+  @ApiExtraModels(UserWithId)
   @ApiResponse({
     status: 200,
     schema: {
-      $ref: getSchemaPath(User)
+      $ref: getSchemaPath(UserWithId)
     }
   })
   @Get('/get/:id')
-  async getOneUser(@Param('id') id: string): Promise<User> {
+  async getOneUser(@Param('id') id: string): Promise<UserWithId> {
     return await this.usersService.getOneUser(id);
   }
 
