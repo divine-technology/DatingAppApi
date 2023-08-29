@@ -66,7 +66,7 @@ export class LoginResponseDto {
 
 export class AuthUser {
   @ApiProperty()
-  _id: mongoose.Types.ObjectId;
+  _id: string;
 
   @ApiProperty()
   firstName: string;

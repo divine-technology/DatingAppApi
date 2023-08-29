@@ -1,7 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { FADILMRZITYPESCRIPT, Message } from '../users/user.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model, mongo } from 'mongoose';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { MessageResponseDto } from './message.types';
 
 export class MessageRepository {
   constructor(
@@ -17,17 +18,20 @@ export class MessageRepository {
   }
 
   async findMessage(likeId: string): Promise<FADILMRZITYPESCRIPT> {
+    const like = new mongoose.Types.ObjectId(likeId);
     return await this.messageModel
-      .findOne({ likeId: likeId })
+      .findOne({ likeId: like })
       .populate('likeId', 'status');
   }
 
   async countMessages(likeId: string): Promise<number> {
-    return await this.messageModel.find({ likeId: likeId }).count();
+    const like = new mongoose.Types.ObjectId(likeId);
+    return await this.messageModel.find({ likeId: like }).count();
   }
 
   async getFirstFiveMessages(likeId: string): Promise<Message[]> {
-    return await this.messageModel.find({ likeId: likeId }).limit(5);
+    const like = new mongoose.Types.ObjectId(likeId);
+    return await this.messageModel.find({ likeId: like }).limit(5);
   }
 
   async getConversation(
@@ -54,9 +58,9 @@ export class MessageRepository {
   }
 
   async getChats(
-    userId: string,
+    userId: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const { page = 1, limit = 10 } = paginateDto;
 
     const latestMessages = await this.messageModel.aggregate([
@@ -88,6 +92,28 @@ export class MessageRepository {
       },
       {
         $replaceRoot: { newRoot: '$latestMessage' }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'from',
+          foreignField: '_id',
+          as: 'fromUser'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'to',
+          foreignField: '_id',
+          as: 'toUser'
+        }
+      },
+      {
+        $addFields: {
+          fromUser: { $arrayElemAt: ['$fromUser', 0] },
+          toUser: { $arrayElemAt: ['$toUser', 0] }
+        }
       },
       {
         $skip: (Number(page) - 1) * Number(limit)
@@ -122,10 +148,34 @@ export class MessageRepository {
     const totalCount =
       conversationCount.length > 0 ? conversationCount[0].count : 0;
 
+    const messagesWithSelectedFields = latestMessages.map((message) => ({
+      _id: message._id,
+      likeId: message.likeId,
+      fromUser: {
+        _id: message.fromUser._id,
+        firstName: message.fromUser.firstName,
+        lastName: message.fromUser.lastName,
+        role: message.fromUser.role,
+        gender: message.fromUser.gender,
+        age: message.fromUser.age
+      },
+      toUser: {
+        _id: message.toUser._id,
+        firstName: message.toUser.firstName,
+        lastName: message.toUser.lastName,
+        role: message.toUser.role,
+        gender: message.toUser.gender,
+        age: message.toUser.age
+      },
+      message: message.message,
+      createdAt: message.createdAt,
+      updatedAt: message.updatedAt
+    }));
+
     return {
       count: totalCount,
       page: limit < 1 ? 1 : Number(page),
-      data: latestMessages
+      data: messagesWithSelectedFields
     };
   }
 

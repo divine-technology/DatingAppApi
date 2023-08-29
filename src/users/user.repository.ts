@@ -7,7 +7,7 @@ import {
   User,
   UserWithId
 } from './user.schema';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, mongo } from 'mongoose';
 import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { AuthUser } from '../auth/auth.types';
@@ -82,8 +82,9 @@ export class UserRepository {
   }
 
   async findMessage(likeId: string): Promise<FADILMRZITYPESCRIPT> {
+    const test = new mongoose.Types.ObjectId(likeId);
     return await this.messageModel
-      .findOne({ likeId: likeId })
+      .findOne({ likeId: test })
       .populate('likeId', 'status');
   }
 

@@ -59,7 +59,7 @@ export class AuthService {
     const token = this.jwtService.sign({ id: fetchedUser._id });
     const dataToReturn: AuthResponseDto = {
       user: {
-        _id: fetchedUser._id,
+        _id: fetchedUser._id.toString(),
         firstName: fetchedUser.firstName,
         lastName: fetchedUser.lastName,
         email: fetchedUser.email,
@@ -115,7 +115,7 @@ export class AuthService {
 
       const dataToReturn: AuthResponseDto = {
         user: {
-          _id: finalUser._id,
+          _id: finalUser._id.toString(),
           firstName: finalUser.firstName,
           lastName: finalUser.lastName,
           email: finalUser.email,

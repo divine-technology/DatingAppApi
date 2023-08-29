@@ -56,7 +56,7 @@ export class AuthGuard implements CanActivate {
         if (!user) throw new UnauthorizedException();
 
         const dataToReturn: AuthUser = {
-          _id: user._id,
+          _id: user._id.toString(),
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,

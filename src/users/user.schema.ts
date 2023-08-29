@@ -14,12 +14,12 @@ export class Message {
   likeId: mongoose.Types.ObjectId;
 
   @ApiProperty()
-  @Prop()
-  from: string;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
+  from: mongoose.Types.ObjectId;
 
   @ApiProperty()
-  @Prop()
-  to: string;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
+  to: mongoose.Types.ObjectId;
 
   @ApiProperty()
   @Prop()

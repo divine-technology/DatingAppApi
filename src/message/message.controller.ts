@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Message } from '../users/user.schema';
 import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
-import { MessageDto } from './message.types';
+import { MessageDto, MessageResponseDto } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { Roles } from '../users/user.enum';
 import { Auth } from '../middleware/auth.decorator';
@@ -50,15 +50,15 @@ export class MessageController {
 
   @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all chats that a user has' })
-  /* @ApiExtraModels(ResponsePaginateDto<Message>)
+  @ApiExtraModels(ResponsePaginateDto<MessageResponseDto>)
   @ApiResponse({
     status: 200,
-    type: ResponsePaginateDto<Message>
-  }) */
+    type: ResponsePaginateDto<MessageResponseDto>
+  })
   @Get('/get-chats')
   async getChat(
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     return await this.messageService.getChats(paginateDto);
   }
 }
