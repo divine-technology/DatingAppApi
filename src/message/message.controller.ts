@@ -9,7 +9,11 @@ import {
 } from '@nestjs/swagger';
 import { Message } from '../users/user.schema';
 import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
-import { MessageDto, MessageResponseDto } from './message.types';
+import {
+  MessageDto,
+  MessageResponseDto,
+  PaginatedMessageResponseDto
+} from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { Roles } from '../users/user.enum';
 import { Auth } from '../middleware/auth.decorator';
@@ -60,5 +64,20 @@ export class MessageController {
     @Query() paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     return await this.messageService.getChats(paginateDto);
+  }
+
+  @Auth(Roles.ADMIN)
+  @ApiOperation({
+    summary:
+      'Do not delete or use this! It was made just for getting the DTO for api client!'
+  })
+  @ApiExtraModels(MessageResponseDto)
+  @ApiResponse({
+    status: 200,
+    type: MessageResponseDto
+  })
+  @Get('/test-dont-use')
+  async testDontUse(): Promise<void> {
+    console.log('Do not use this or you will be fired! :D');
   }
 }

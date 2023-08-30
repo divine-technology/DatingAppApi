@@ -35,3 +35,12 @@ export class MessageResponseDto {
   @ApiProperty()
   toUser: Partial<UserResponse>;
 }
+
+export class PaginatedMessageResponseDto {
+  @ApiProperty()
+  count: number;
+  @ApiProperty()
+  page: number;
+  @ApiProperty()
+  data: MessageResponseDto[];
+}
