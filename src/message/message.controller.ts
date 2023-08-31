@@ -12,7 +12,7 @@ import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
 import {
   MessageDto,
   MessageResponseDto,
-  PaginatedMessageResponseDto
+  MultipleMessagesResponseDto
 } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { Roles } from '../users/user.enum';
@@ -48,7 +48,7 @@ export class MessageController {
   async getConversation(
     @Param('likeId') likeId: string,
     @Query() paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
+  ): Promise<ResponsePaginateDto<MultipleMessagesResponseDto>> {
     return await this.messageService.getConversation(likeId, paginateDto);
   }
 
@@ -64,6 +64,20 @@ export class MessageController {
     @Query() paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     return await this.messageService.getChats(paginateDto);
+  }
+
+  @Auth(Roles.ADMIN)
+  @ApiOperation({ summary: 'Get all like request chats that a user has' })
+  @ApiExtraModels(ResponsePaginateDto<MessageResponseDto>)
+  @ApiResponse({
+    status: 200,
+    type: ResponsePaginateDto<MessageResponseDto>
+  })
+  @Get('/get-request-chats')
+  async getLikeRequestChats(
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
+    return await this.messageService.getLikeRequestChats(paginateDto);
   }
 
   @Auth(Roles.ADMIN)

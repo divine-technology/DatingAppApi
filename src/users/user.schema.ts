@@ -26,6 +26,13 @@ export class Message {
   message: string;
 }
 
+export class MessageWithDate extends Message {
+  @ApiProperty()
+  _id: mongoose.Types.ObjectId;
+  @ApiProperty()
+  createdAt: Date;
+}
+
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
 export interface FADILMRZITYPESCRIPT extends Omit<Message, 'likeId'> {

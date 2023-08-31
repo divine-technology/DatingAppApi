@@ -36,11 +36,33 @@ export class MessageResponseDto {
   toUser: Partial<UserResponse>;
 }
 
-export class PaginatedMessageResponseDto {
+export class MessageUserResponse {
   @ApiProperty()
-  count: number;
+  _id: string;
   @ApiProperty()
-  page: number;
+  name: string;
   @ApiProperty()
-  data: MessageResponseDto[];
+  avatar: string;
 }
+export class MultipleMessagesResponseDto {
+  @ApiProperty()
+  _id: string;
+  @ApiProperty()
+  text: string;
+  @ApiProperty()
+  createdAt: Date;
+  @ApiProperty()
+  user: MessageUserResponse;
+}
+
+
+  // {
+  //   _id: 1,
+  //   text: 'Hello developer',
+  //   createdAt: new Date(),
+  //   user: {
+  //     _id: 2,
+  //     name: 'React Native',
+  //     avatar: 'https://placeimg.com/140/140/any',
+  //   },
+  // },

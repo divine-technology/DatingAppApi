@@ -2,8 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { MessageRepository } from './message.repository';
 import { LikeService } from '../like/like.service';
 import { MatchStatus } from '../like/like.types';
-import { Message } from '../users/user.schema';
-import { MessageDto, MessageResponseDto } from './message.types';
+import { Message, MessageWithDate, UserWithId } from '../users/user.schema';
+import { MessageDto, MessageResponseDto, MultipleMessagesResponseDto } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import mongoose from 'mongoose';
@@ -114,8 +114,30 @@ export class MessageService {
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
-    return await this.messageRepository.getConversation(likeId, paginateDto);
+  ): Promise<ResponsePaginateDto<MultipleMessagesResponseDto>> {
+    const data = await this.messageRepository.getConversation(likeId, paginateDto);
+    const messageData = data.data as unknown as MessageWithDate[]
+
+    const dataToReturn: MultipleMessagesResponseDto[] = [];
+
+    messageData.forEach((message) => {
+      dataToReturn.push({
+        _id: message._id.toString(),
+        text: message.message,
+        createdAt: message.createdAt,
+        user: {
+          _id: (message.from as unknown as UserWithId)._id.toString(),
+          name: (message.from as unknown as UserWithId).firstName + ' ' + (message.from as unknown as UserWithId).lastName,
+          avatar: 'https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg'
+        }
+      })
+    })
+
+    return {
+      count: data.count,
+      page: data.page,
+      data: dataToReturn
+    };
   }
 
   async getChats(
@@ -129,6 +151,23 @@ export class MessageService {
     const likeRequestIds: mongoose.Types.ObjectId[] = [];
     likeRequests.data.forEach((request) => likeRequestIds.push(request._id));
     return await this.messageRepository.getChats(
+      new mongoose.Types.ObjectId(userId),
+      paginateDto,
+      likeRequestIds
+    );
+  }
+
+  async getLikeRequestChats(
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
+    const userId = this.contextService.userContext.user._id;
+    const likeRequests = await this.likeService.getLikeRequests(
+      userId,
+      paginateDto
+    );
+    const likeRequestIds: mongoose.Types.ObjectId[] = [];
+    likeRequests.data.forEach((request) => likeRequestIds.push(request._id));
+    return await this.messageRepository.getLikeRequestChats(
       new mongoose.Types.ObjectId(userId),
       paginateDto,
       likeRequestIds
