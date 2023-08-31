@@ -43,7 +43,6 @@ export class MessageService {
             message
           };
           const test = await this.messageRepository.createMessage(newMessage);
-          console.log(test);
           return test;
         } else {
           throw new UnauthorizedException('Not a picture! / Cannot do that!');
@@ -62,7 +61,6 @@ export class MessageService {
             message
           };
           const test = await this.messageRepository.createMessage(newMessage);
-          console.log(test);
           return test;
         } else {
           throw new UnauthorizedException('Cannot send more than 2 messages!');
@@ -80,8 +78,6 @@ export class MessageService {
           }
         });
 
-        console.log('Count: ', count, 'doesMessageExist: ', doesMessageExist);
-
         if (count <= 2 && doesMessageExist === false) {
           if (message === 'test url') {
             const newMessage = {
@@ -94,7 +90,6 @@ export class MessageService {
             console.log(test);
             return test;
           } else {
-            console.log('STVARNO OVDJE DODJES?');
             throw new UnauthorizedException('Not a picture!');
           }
         } else {
@@ -127,9 +122,16 @@ export class MessageService {
     paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const userId = this.contextService.userContext.user._id;
+    const likeRequests = await this.likeService.getLikeRequests(
+      userId,
+      paginateDto
+    );
+    const likeRequestIds: mongoose.Types.ObjectId[] = [];
+    likeRequests.data.forEach((request) => likeRequestIds.push(request._id));
     return await this.messageRepository.getChats(
       new mongoose.Types.ObjectId(userId),
-      paginateDto
+      paginateDto,
+      likeRequestIds
     );
   }
 

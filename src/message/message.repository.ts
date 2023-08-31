@@ -59,7 +59,8 @@ export class MessageRepository {
 
   async getChats(
     userId: mongoose.Types.ObjectId,
-    paginateDto: PaginateDto
+    paginateDto: PaginateDto,
+    likeRequestIds: mongoose.Types.ObjectId[]
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const { page = 1, limit = 10 } = paginateDto;
 
@@ -113,6 +114,11 @@ export class MessageRepository {
         $addFields: {
           fromUser: { $arrayElemAt: ['$fromUser', 0] },
           toUser: { $arrayElemAt: ['$toUser', 0] }
+        }
+      },
+      {
+        $match: {
+          likeId: { $nin: likeRequestIds }
         }
       },
       {

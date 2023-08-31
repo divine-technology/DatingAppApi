@@ -103,7 +103,7 @@ export class LikeService {
   async getLikeRequests(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikeRequests(newId, paginateDto);
     const count = likes.count;
@@ -112,8 +112,14 @@ export class LikeService {
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[0], item.status);
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[0],
+        status: item.status
+      });
     });
+
+    console.log('NEW TEST ARRAY: ', newTestArray);
 
     const dataToReturn = {
       count,

@@ -2,6 +2,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Like, LikeWithId, User } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { LikeResponseDto } from './like.types';
 
 export class LikeRepository {
   constructor(
@@ -146,7 +147,7 @@ export class LikeRepository {
   async getLikeRequests(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -162,14 +163,23 @@ export class LikeRepository {
         status: { $in: ['one_liked'] }
       })
       .populate('users', 'firstName lastName email gender bio age')
-      .select('status')
+      .select('users status')
       .limit(limit)
       .skip((page - 1) * limit);
+
+    const dataToReturn: LikeWithId[] = [];
+    data.forEach((like) =>
+      dataToReturn.push({
+        _id: like._id,
+        users: like.users,
+        status: like.status
+      })
+    );
 
     return {
       count: count,
       page: limit < 1 ? 1 : page,
-      data
+      data: dataToReturn
     };
   }
 
