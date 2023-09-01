@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException, forwardRef } from '@nestjs/common';
 import { MessageRepository } from './message.repository';
 import { LikeService } from '../like/like.service';
 import { MatchStatus } from '../like/like.types';
-import { Message, MessageWithDate, UserWithId } from '../users/user.schema';
-import { MessageDto, MessageResponseDto, MultipleMessagesResponseDto } from './message.types';
+import { Like, Message, MessageWithDate, UserWithId } from '../users/user.schema';
+import { MessageBodyDto, MessageDto, MessageResponseDto, MultipleMessagesResponseDto } from './message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import mongoose from 'mongoose';
@@ -12,6 +12,7 @@ import mongoose from 'mongoose';
 export class MessageService {
   constructor(
     private readonly messageRepository: MessageRepository,
+    @Inject(forwardRef(() => LikeService))
     private readonly likeService: LikeService,
     private readonly contextService: ContextService
   ) {}
@@ -20,26 +21,24 @@ export class MessageService {
     return this.messageRepository.test();
   }
 
-  async sendMessage(likeId: string, messageDto: MessageDto): Promise<Message> {
-    const { from, to, message } = messageDto;
+  async sendMessage(likeId: string, messageDto: MessageBodyDto): Promise<Message> {
+    const { message } = messageDto;
     const doesConversationExist = await this.messageRepository.findMessage(
       likeId
     );
     const findLike = await this.likeService.findLikeById(likeId);
 
-    const arr = [from, to];
+    const from = this.contextService.userContext.user._id
 
     if (!doesConversationExist) {
       if (
         findLike.status === MatchStatus.ONE_LIKED &&
-        arr.includes(findLike.users[0].toString()) &&
-        arr.includes(findLike.users[1].toString())
+        findLike.users[0]._id.toString() === from
       ) {
-        if (message === 'test url' && arr[0] === findLike.users[0].toString()) {
-          const newMessage = {
+        if (message === 'test url' && from === findLike.users[0]._id.toString()) {
+          const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
             message
           };
           const test = await this.messageRepository.createMessage(newMessage);
@@ -54,10 +53,9 @@ export class MessageService {
       if (findLike.status === MatchStatus.ONE_LIKED) {
         const count = await this.messageRepository.countMessages(likeId);
         if (count < 2 && doesConversationExist.from.toString() === from) {
-          const newMessage = {
+          const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
             message
           };
           const test = await this.messageRepository.createMessage(newMessage);
@@ -83,7 +81,6 @@ export class MessageService {
             const newMessage = {
               likeId: new mongoose.Types.ObjectId(likeId),
               from: new mongoose.Types.ObjectId(from),
-              to: new mongoose.Types.ObjectId(to),
               message
             };
             const test = await this.messageRepository.createMessage(newMessage);
@@ -96,7 +93,6 @@ export class MessageService {
           const newMessage = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
             message
           };
           const test = await this.messageRepository.createMessage(newMessage);
@@ -148,13 +144,25 @@ export class MessageService {
       userId,
       paginateDto
     );
+
+    const likes = await this.likeService.getLikes(userId, paginateDto);
+    const bothLikes = await this.likeService.getBothLikes(userId, paginateDto);
+
+    const likeIds: mongoose.Types.ObjectId[] = []
+    likes.data.forEach((like) => likeIds.push(like._id))
+    bothLikes.data.forEach((like) => likeIds.push(like._id))
+
     const likeRequestIds: mongoose.Types.ObjectId[] = [];
     likeRequests.data.forEach((request) => likeRequestIds.push(request._id));
-    return await this.messageRepository.getChats(
+
+    const data = await this.messageRepository.getChats(
       new mongoose.Types.ObjectId(userId),
       paginateDto,
-      likeRequestIds
+      likeRequestIds,
+      likeIds
     );
+    
+    return data;
   }
 
   async getLikeRequestChats(

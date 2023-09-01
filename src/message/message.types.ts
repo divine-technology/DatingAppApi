@@ -11,8 +11,10 @@ export class MessageDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  to: string;
+  message: string;
+}
 
+export class MessageBodyDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()

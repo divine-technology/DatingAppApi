@@ -13,6 +13,8 @@ import { Like } from '../users/user.schema';
 import { isArray } from 'class-validator';
 import { REACT_WITH_USER_EXAMPLE } from '../swagger/example';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { Auth } from '../middleware/auth.decorator';
+import { Roles } from '../users/user.enum';
 
 @ApiTags('Like')
 @Controller('likes')
@@ -89,6 +91,7 @@ export class LikeController {
     return await this.likeService.getBlocked(id, paginateDto);
   }
 
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'React with a user' })
   @ApiBody({
     examples: REACT_WITH_USER_EXAMPLE,
@@ -99,11 +102,10 @@ export class LikeController {
     status: 200,
     type: String
   })
-  @Post('/react/:id')
+  @Post('/react/')
   async reactWithUser(
-    @Param('id') id: string,
     @Body() reactWithUserDto: ReactWithUserDto
   ): Promise<string> {
-    return await this.likeService.reactWithUser(id, reactWithUserDto);
+    return await this.likeService.reactWithUser(reactWithUserDto);
   }
 }

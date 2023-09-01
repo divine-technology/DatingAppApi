@@ -222,98 +222,98 @@ export class UsersService {
     }
   } */
 
-  async sendMessage(likeId: string, messageDto: MessageDto): Promise<boolean> {
-    const { from, to, message } = messageDto;
-    const doesConversationExist = await this.userRepository.findMessage(likeId);
-    const findLike = await this.userRepository.findLikeById(likeId);
-    console.log(
-      `LikeId: ${likeId} From: ${from} To: ${to} Message: ${message} Does the convo exist: ${doesConversationExist}`
-    );
-    const arr = [from, to];
+  // async sendMessage(likeId: string, messageDto: MessageDto): Promise<boolean> {
+  //   const { from, to, message } = messageDto;
+  //   const doesConversationExist = await this.userRepository.findMessage(likeId);
+  //   const findLike = await this.userRepository.findLikeById(likeId);
+  //   console.log(
+  //     `LikeId: ${likeId} From: ${from} To: ${to} Message: ${message} Does the convo exist: ${doesConversationExist}`
+  //   );
+  //   const arr = [from, to];
 
-    if (!doesConversationExist) {
-      console.log('JEBO MAJKU NEMOGUCE');
-      if (
-        findLike.status === MatchStatus.ONE_LIKED &&
-        arr.includes(findLike.users[0].toString()) &&
-        arr.includes(findLike.users[1].toString())
-      ) {
-        if (message === 'test url' && arr[0] === findLike.users[0].toString()) {
-          const newMessage = {
-            likeId: new mongoose.Types.ObjectId(likeId),
-            from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else if (doesConversationExist) {
-      if (findLike.status === MatchStatus.ONE_LIKED) {
-        const count = await this.userRepository.countMessages(likeId);
-        if (count < 2 && doesConversationExist.from.toString() === from) {
-          const newMessage = {
-            likeId: new mongoose.Types.ObjectId(likeId),
-            from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        } else {
-          return false;
-        }
-      } else if (findLike.status === MatchStatus.LIKED_BACK) {
-        console.log('FUCKING GOES HERE?');
-        const messages = await this.userRepository.getFirstFiveMessages(likeId);
-        const count = await this.userRepository.countMessages(likeId);
-        let doesMessageExist = false;
-        messages.forEach((message) => {
-          if (message.from.toString() === from) {
-            doesMessageExist = true;
-            return;
-          }
-        });
+  //   if (!doesConversationExist) {
+  //     console.log('JEBO MAJKU NEMOGUCE');
+  //     if (
+  //       findLike.status === MatchStatus.ONE_LIKED &&
+  //       arr.includes(findLike.users[0].toString()) &&
+  //       arr.includes(findLike.users[1].toString())
+  //     ) {
+  //       if (message === 'test url' && arr[0] === findLike.users[0].toString()) {
+  //         const newMessage = {
+  //           likeId: new mongoose.Types.ObjectId(likeId),
+  //           from: new mongoose.Types.ObjectId(from),
+  //           to: new mongoose.Types.ObjectId(to),
+  //           message
+  //         };
+  //         const test = await this.userRepository.createMessage(newMessage);
+  //         console.log(test);
+  //         return true;
+  //       } else {
+  //         return false;
+  //       }
+  //     } else {
+  //       return false;
+  //     }
+  //   } else if (doesConversationExist) {
+  //     if (findLike.status === MatchStatus.ONE_LIKED) {
+  //       const count = await this.userRepository.countMessages(likeId);
+  //       if (count < 2 && doesConversationExist.from.toString() === from) {
+  //         const newMessage = {
+  //           likeId: new mongoose.Types.ObjectId(likeId),
+  //           from: new mongoose.Types.ObjectId(from),
+  //           to: new mongoose.Types.ObjectId(to),
+  //           message
+  //         };
+  //         const test = await this.userRepository.createMessage(newMessage);
+  //         console.log(test);
+  //         return true;
+  //       } else {
+  //         return false;
+  //       }
+  //     } else if (findLike.status === MatchStatus.LIKED_BACK) {
+  //       console.log('FUCKING GOES HERE?');
+  //       const messages = await this.userRepository.getFirstFiveMessages(likeId);
+  //       const count = await this.userRepository.countMessages(likeId);
+  //       let doesMessageExist = false;
+  //       messages.forEach((message) => {
+  //         if (message.from.toString() === from) {
+  //           doesMessageExist = true;
+  //           return;
+  //         }
+  //       });
 
-        if (count <= 2 && doesMessageExist === false) {
-          if (message === 'test url') {
-            const newMessage = {
-              likeId: new mongoose.Types.ObjectId(likeId),
-              from: new mongoose.Types.ObjectId(from),
-              to: new mongoose.Types.ObjectId(to),
-              message
-            };
-            const test = await this.userRepository.createMessage(newMessage);
-            console.log(test);
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          const newMessage = {
-            likeId: new mongoose.Types.ObjectId(likeId),
-            from: new mongoose.Types.ObjectId(from),
-            to: new mongoose.Types.ObjectId(to),
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
+  //       if (count <= 2 && doesMessageExist === false) {
+  //         if (message === 'test url') {
+  //           const newMessage = {
+  //             likeId: new mongoose.Types.ObjectId(likeId),
+  //             from: new mongoose.Types.ObjectId(from),
+  //             to: new mongoose.Types.ObjectId(to),
+  //             message
+  //           };
+  //           const test = await this.userRepository.createMessage(newMessage);
+  //           console.log(test);
+  //           return true;
+  //         } else {
+  //           return false;
+  //         }
+  //       } else {
+  //         const newMessage = {
+  //           likeId: new mongoose.Types.ObjectId(likeId),
+  //           from: new mongoose.Types.ObjectId(from),
+  //           to: new mongoose.Types.ObjectId(to),
+  //           message
+  //         };
+  //         const test = await this.userRepository.createMessage(newMessage);
+  //         console.log(test);
+  //         return true;
+  //       }
+  //     } else {
+  //       return false;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // }
 
   async getConversation(
     likeId: string,

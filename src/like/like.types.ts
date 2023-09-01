@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { Like, User, UserWithId } from '../users/user.schema';
 import { ApiProperty } from '@nestjs/swagger';
+import mongoose from 'mongoose';
 
 export class ReactWithUserDto {
   @ApiProperty()
@@ -28,6 +29,8 @@ export class ReactWithUserDto {
 }
 
 export class LikeResponseDto {
+  @ApiProperty()
+  _id: mongoose.Types.ObjectId;
   @ApiProperty()
   user: Partial<UserWithId>;
   @ApiProperty()

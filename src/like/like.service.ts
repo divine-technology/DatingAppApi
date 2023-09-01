@@ -13,16 +13,21 @@ import {
   LikeWithErrorStatus,
   LikeResponseDto
 } from './like.types';
-import { Like, LikeWithId } from '../users/user.schema';
+import { Like, LikeWithId, Message } from '../users/user.schema';
 import { MessageService } from '../message/message.service';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { MessageDto } from '../message/message.types';
+import { ContextService } from '../context/context.service';
 
 @Injectable()
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
     @Inject(forwardRef(() => UsersService))
-    private readonly userService: UsersService //private readonly messageService: MessageService
+    private readonly userService: UsersService, //private readonly messageService: MessageService
+    @Inject(forwardRef(() => MessageService))
+    private readonly likeService: MessageService,
+    private readonly contextService: ContextService
   ) {}
 
   async test() {
@@ -38,9 +43,9 @@ export class LikeService {
     const count = likes.count;
     const page = likes.page;
 
-    const newTestArray = [];
+    const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push({ user: item.users[1], status: item.status });
+      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
     });
 
     const dataToReturn = {
@@ -62,9 +67,9 @@ export class LikeService {
 
     const page = likes.page;
 
-    const newTestArray = [];
+    const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push({ user: item.users[1], status: item.status });
+      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
     });
 
     const dataToReturn = {
@@ -118,8 +123,6 @@ export class LikeService {
         status: item.status
       });
     });
-
-    console.log('NEW TEST ARRAY: ', newTestArray);
 
     const dataToReturn = {
       count,
@@ -227,33 +230,38 @@ export class LikeService {
   }
 
   async reactWithUser(
-    id: string,
     reactWithUserDto: ReactWithUserDto
   ): Promise<string> {
+    const id = this.contextService.userContext.user._id
     let like: LikeWithErrorStatus;
-    let message: Boolean;
+    let message: Message;
     if (
       reactWithUserDto.status === MatchStatus.LIKED &&
       reactWithUserDto.likedPhotoUrl != null
     ) {
       const { likedUserId, likedPhotoUrl } = reactWithUserDto;
-      const messageDto = {
+      const messageDto: MessageDto = {
         from: id,
-        to: likedUserId,
         message: likedPhotoUrl
       };
+
+      if(likedPhotoUrl !== 'test url') {
+        throw new UnauthorizedException('Not a picture!');
+      }
 
       like = await this.like(id, likedUserId);
       if (like.hasErrors) {
         throw new UnauthorizedException('Error with liking');
       } else {
-        message = await this.userService.sendMessage(
-          like._id.toString(),
-          messageDto
-        );
-        if (!message) {
-          throw new UnauthorizedException('Error with sending message');
-        } else return 'Reaction saved!';
+        try {
+          message = await this.likeService.sendMessage(
+            like._id.toString(),
+            messageDto
+          );
+          return 'Reaction saved!';
+        } catch (e) {
+          throw new UnauthorizedException(e);
+        }
       }
       /* try {
         console.log('STEP ONE');

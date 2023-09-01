@@ -18,10 +18,6 @@ export class Message {
   from: mongoose.Types.ObjectId;
 
   @ApiProperty()
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
-  to: mongoose.Types.ObjectId;
-
-  @ApiProperty()
   @Prop()
   message: string;
 }

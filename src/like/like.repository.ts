@@ -27,7 +27,7 @@ export class LikeRepository {
   async getBothLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -57,7 +57,7 @@ export class LikeRepository {
   async getLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -284,7 +284,7 @@ export class LikeRepository {
   }
 
   async findLikeById(id: string): Promise<Like> {
-    return await this.likeModel.findById(id);
+    return await this.likeModel.findById(id).populate('users', '_id firstName lastName email gender bio age');
   }
 
   async deleteLike(id: string): Promise<Like> {

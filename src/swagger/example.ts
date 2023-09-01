@@ -52,7 +52,6 @@ export const SEND_MESSAGE_EXAMPLE = {
   example1: {
     value: {
       from: 'a',
-      to: 'b',
       message: 'hello'
     }
   }

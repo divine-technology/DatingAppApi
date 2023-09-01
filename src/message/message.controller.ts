@@ -10,6 +10,7 @@ import {
 import { Message } from '../users/user.schema';
 import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
 import {
+  MessageBodyDto,
   MessageDto,
   MessageResponseDto,
   MultipleMessagesResponseDto
@@ -23,6 +24,7 @@ import { Auth } from '../middleware/auth.decorator';
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Send message' })
   @ApiExtraModels(Message)
   @ApiBody({ examples: SEND_MESSAGE_EXAMPLE, type: MessageDto })
@@ -33,7 +35,7 @@ export class MessageController {
   @Post('/send-message/:likeId')
   async sendMessage(
     @Param('likeId') likeId: string,
-    @Body() messageDto: MessageDto
+    @Body() messageDto: MessageBodyDto
   ): Promise<Message> {
     return await this.messageService.sendMessage(likeId, messageDto);
   }

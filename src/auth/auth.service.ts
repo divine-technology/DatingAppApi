@@ -30,6 +30,7 @@ export const NUMBER_OF_SALTS = 10;
 export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
     private jwtService: JwtService,
     private readonly contextService: ContextService

@@ -20,6 +20,8 @@ import { MailerService } from '../mailer/mailer.service';
 import { ContextService } from '../context/context.service';
 import { LikeService } from '../like/like.service';
 import { LikeRepository } from '../like/like.repository';
+import { MessageService } from '../message/message.service';
+import { MessageRepository } from '../message/message.repository';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { LikeRepository } from '../like/like.repository';
     ContextService,
     UserRepository,
     LikeRepository,
+    MessageService,
+    MessageRepository,
     MailerService
   ],
   exports: [AuthRepository]
