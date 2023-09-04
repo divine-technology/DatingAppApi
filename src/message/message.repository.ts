@@ -47,9 +47,9 @@ export class MessageRepository {
       .find<MessageWithDate>({
         likeId: likeIdObj
       })
+      .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
-      .sort({ createdAt: -1 })
       .populate('from');
 
     return {
