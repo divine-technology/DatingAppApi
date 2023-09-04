@@ -31,7 +31,7 @@ import {
   UserResponse
 } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
-import { LoginResponseDto } from '../auth/auth.types';
+import { AuthUser, LoginResponseDto } from '../auth/auth.types';
 import { Roles } from './user.enum';
 import { Auth } from '../middleware/auth.decorator';
 
@@ -98,15 +98,13 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Get user by id' })
-  @ApiExtraModels(UserWithId)
+  @ApiExtraModels(UserResponse)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(UserWithId)
-    }
+    type: UserResponse
   })
   @Get('/get/:id')
-  async getOneUser(@Param('id') id: string): Promise<UserWithId> {
+  async getOneUser(@Param('id') id: string): Promise<AuthUser> {
     return await this.usersService.getOneUser(id);
   }
 

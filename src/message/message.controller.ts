@@ -27,7 +27,7 @@ export class MessageController {
   @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Send message' })
   @ApiExtraModels(Message)
-  @ApiBody({ examples: SEND_MESSAGE_EXAMPLE, type: MessageDto })
+  @ApiBody({ examples: SEND_MESSAGE_EXAMPLE, type: MessageBodyDto })
   @ApiResponse({
     status: 200,
     type: Message

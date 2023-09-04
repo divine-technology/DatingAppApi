@@ -25,6 +25,7 @@ import { MessageDto } from '../message/message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import { LikeService } from '../like/like.service';
+import { AuthUser } from '../auth/auth.types';
 
 export const numberOfSalts = 10;
 
@@ -330,7 +331,7 @@ export class UsersService {
     return await this.userRepository.getPhotoLinks(whereArray);
   }
 
-  async getOneUser(id: string): Promise<UserWithId> {
+  async getOneUser(id: string): Promise<AuthUser> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid id parameter');
     }
@@ -338,7 +339,21 @@ export class UsersService {
     if (!res) {
       throw new NotFoundException('User not found');
     }
-    return res;
+    const dataToReturn: AuthUser = {
+      _id: res._id,
+      firstName: res.firstName,
+      lastName: res.lastName,
+      email: res.email,
+      gender: res.gender,
+      age: res.age,
+      bio: res.bio,
+      role: res.role,
+      location: res.location,
+      preference: res.preference,
+      createdAccountTimeStamp: res.createdAccountTimeStamp,
+      hobbies: []
+    }
+    return dataToReturn;
   }
 
   async getRadius(

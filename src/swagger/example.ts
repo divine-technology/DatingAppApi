@@ -51,7 +51,6 @@ export const REACT_WITH_USER_EXAMPLE = {
 export const SEND_MESSAGE_EXAMPLE = {
   example1: {
     value: {
-      from: 'a',
       message: 'hello'
     }
   }

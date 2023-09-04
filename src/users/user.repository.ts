@@ -136,7 +136,7 @@ export class UserRepository {
     }
   }
 
-  async getOneUser(id: string): Promise<UserWithId> {
+  async getOneUser(id: string): Promise<AuthUser> {
     return await this.userModel.findById(id);
   }
 

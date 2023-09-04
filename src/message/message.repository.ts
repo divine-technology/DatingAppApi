@@ -50,7 +50,7 @@ export class MessageRepository {
       .limit(limit)
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 })
-      .populate('from to');
+      .populate('from');
 
     return {
       count: count,
