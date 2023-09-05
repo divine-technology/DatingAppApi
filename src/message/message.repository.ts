@@ -272,127 +272,112 @@ export class MessageRepository {
       page: limit < 1 ? 1 : Number(page),
       data: messagesWithSelectedFields
     };
-    // const { page = 1, limit = 10 } = paginateDto;
+  }
 
-    // const latestMessages = await this.messageModel.aggregate([
-    //   {
-    //     $match: {
-    //       $or: [{ from: userId }, { to: userId }]
-    //     }
-    //   },
-    //   {
-    //     $addFields: {
-    //       participants: {
-    //         $setUnion: [
-    //           [{ $cond: [{ $eq: ['$from', userId] }, '$to', '$from'] }],
-    //           [userId]
-    //         ]
-    //       }
-    //     }
-    //   },
-    //   {
-    //     $sort: {
-    //       createdAt: -1
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: '$participants',
-    //       latestMessage: { $first: '$$ROOT' }
-    //     }
-    //   },
-    //   {
-    //     $replaceRoot: { newRoot: '$latestMessage' }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'users',
-    //       localField: 'from',
-    //       foreignField: '_id',
-    //       as: 'fromUser'
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'users',
-    //       localField: 'to',
-    //       foreignField: '_id',
-    //       as: 'toUser'
-    //     }
-    //   },
-    //   {
-    //     $addFields: {
-    //       fromUser: { $arrayElemAt: ['$fromUser', 0] },
-    //       toUser: { $arrayElemAt: ['$toUser', 0] }
-    //     }
-    //   },
-    //   {
-    //     $match: {
-    //       likeId: { $in: likeRequestIds }
-    //     }
-    //   },
-    //   {
-    //     $skip: (Number(page) - 1) * Number(limit)
-    //   },
-    //   {
-    //     $limit: Number(limit)
-    //   }
-    // ]);
+  async getBlockedChats(
+    userId: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto,
+    blockIds: mongoose.Types.ObjectId[]
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
+    const { page = 1, limit = 10 } = paginateDto;
+  
+    const latestMessages = await this.messageModel.aggregate([
+      {
+        $match: {
+          likeId: { $in: blockIds }
+        }
+      },
+      {
+        $sort: {
+          createdAt: -1
+        }
+      },
+      {
+        $group: {
+          _id: '$likeId',
+          latestMessage: { $first: '$$ROOT' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'latestMessage.from',
+          foreignField: '_id',
+          as: 'fromUser'
+        }
+      },
+      {
+        $lookup: {
+          from: 'likes',
+          localField: 'latestMessage.likeId',
+          foreignField: '_id',
+          as: 'likesData'
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'likesData.users',
+          foreignField: '_id',
+          as: 'usersData'
+        },
+      },
+      {
+        $addFields: {
+          fromUser: { $arrayElemAt: ['$fromUser', 0] }
+        }
+      },
+      {
+        $addFields: {
+          likesData: { $arrayElemAt: ['$likesData', 0] }
+        }
+      },
+      {
+        $addFields: {
+          usersData: '$usersData' 
+        }
+      },
+      {
+        $skip: (Number(page) - 1) * Number(limit)
+      },
+      {
+        $limit: Number(limit)
+      }
+    ]);
 
-    // const conversationCount = await this.messageModel.aggregate([
-    //   {
-    //     $match: {
-    //       $or: [{ from: userId }, { to: userId }]
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: {
-    //         from: '$from',
-    //         to: '$to'
-    //       }
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: null,
-    //       count: { $sum: 1 }
-    //     }
-    //   }
-    // ]);
-
-    // const totalCount =
-    //   conversationCount.length > 0 ? conversationCount[0].count : 0;
-
-    // const messagesWithSelectedFields = latestMessages.map((message) => ({
-    //   _id: message.latestMessage._id,
-    //   likeId: message.latestMessage.likeId,
-    //   fromUser: {
-    //     _id: message.fromUser._id,
-    //     firstName: message.fromUser.firstName,
-    //     lastName: message.fromUser.lastName,
-    //     role: message.fromUser.role,
-    //     gender: message.fromUser.gender,
-    //     age: message.fromUser.age
-    //   },
-    //   toUser: {
-    //     _id: message.toUser._id,
-    //     firstName: message.toUser.firstName,
-    //     lastName: message.toUser.lastName,
-    //     role: message.toUser.role,
-    //     gender: message.toUser.gender,
-    //     age: message.toUser.age
-    //   },
-    //   message: message.message,
-    //   createdAt: message.createdAt,
-    //   updatedAt: message.updatedAt
-    // }));
-
-    // return {
-    //   count: totalCount,
-    //   page: limit < 1 ? 1 : Number(page),
-    //   data: messagesWithSelectedFields
-    // };
+    console.log('LATEST MESSAGE: ', latestMessages);
+  
+    const totalCount = latestMessages.length;
+  
+    const messagesWithSelectedFields: MessageResponseDto[]= latestMessages.map((message) => ({
+      _id: message.latestMessage._id,
+      likeId: message.latestMessage.likeId,
+      fromUser: {
+        _id: message.fromUser._id,
+        firstName: message.fromUser.firstName,
+        lastName: message.fromUser.lastName,
+        role: message.fromUser.role,
+        gender: message.fromUser.gender,
+        age: message.fromUser.age
+      },
+      toUser: {
+        _id: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1]._id.toString() : message.usersData[0]._id.toString(),
+        firstName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].firstName : message.usersData[0].firstName,
+        lastName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].lastName : message.usersData[0].lastName,
+        role: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].role : message.usersData[0].role,
+        gender: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].gender : message.usersData[0].gender,
+        age: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].age : message.usersData[0].age
+      },
+      message: message.latestMessage.message,
+      createdAt: message.latestMessage.createdAt,
+      updatedAt: message.latestMessage.updatedAt
+    }));
+  
+    return {
+      count: totalCount,
+      page: limit < 1 ? 1 : Number(page),
+      data: messagesWithSelectedFields
+    };
   }
 
   async getPhotoLinks(whereArray: any[]): Promise<Message[]> {

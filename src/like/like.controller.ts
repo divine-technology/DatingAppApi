@@ -9,7 +9,7 @@ import {
   ApiTags,
   getSchemaPath
 } from '@nestjs/swagger';
-import { Like } from '../users/user.schema';
+import { Like, LikeWithId } from '../users/user.schema';
 import { isArray } from 'class-validator';
 import { REACT_WITH_USER_EXAMPLE } from '../swagger/example';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';

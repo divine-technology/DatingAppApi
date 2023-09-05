@@ -182,6 +182,25 @@ export class MessageService {
     );
   }
 
+  async getBlockedChats(
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
+    const userId = this.contextService.userContext.user._id;
+    const blocked = await this.likeService.getBlocked(
+      userId,
+      paginateDto
+    );
+
+    const blockIds: mongoose.Types.ObjectId[] = [];
+    blocked.data.forEach((request) => blockIds.push(request._id));
+
+    return await this.messageRepository.getBlockedChats(
+      new mongoose.Types.ObjectId(userId),
+      paginateDto,
+      blockIds
+    );
+  }
+
   async deleteMessages(likeId: string): Promise<string> {
     return await this.messageRepository.deleteMessages(likeId);
   }

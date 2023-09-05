@@ -140,12 +140,11 @@ export class LikeService {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBlocked(newId, paginateDto);
     const count = likes.count;
-
     const page = likes.page;
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push({ user: item.users[1], status: item.status });
+      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
     });
 
     const dataToReturn = {

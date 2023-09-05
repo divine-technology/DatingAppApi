@@ -27,7 +27,7 @@ export class MailerService {
 
     let info = await transporter.sendMail({
       from: process.env.EMAIL, // sender address
-      to: 'ltzonda.love@gmail.com', // list of receivers
+      to: 'dzanin.masic1@gmail.com', // list of receivers
       subject: 'Hello ✔', // Subject line
       html: '<b>Hello world?</b>' // html body
     });

@@ -83,6 +83,20 @@ export class MessageController {
   }
 
   @Auth(Roles.ADMIN)
+  @ApiOperation({ summary: 'Get users that are blocked by the user' })
+  @ApiExtraModels(ResponsePaginateDto<MessageResponseDto>)
+  @ApiResponse({
+    status: 200,
+    type: ResponsePaginateDto<MessageResponseDto>
+  })
+  @Get('/get-blocked-chats')
+  async getBlockedChats(
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<MessageResponseDto>> {
+    return await this.messageService.getBlockedChats(paginateDto);
+  }
+
+  @Auth(Roles.ADMIN)
   @ApiOperation({
     summary:
       'Do not delete or use this! It was made just for getting the DTO for api client!'

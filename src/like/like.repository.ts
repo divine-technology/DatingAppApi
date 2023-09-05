@@ -186,7 +186,7 @@ export class LikeRepository {
   async getBlocked(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Like>> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
