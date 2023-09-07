@@ -74,10 +74,7 @@ export class UserRepository {
     return await this.userModel.create(user);
   }
 
-  async updateById(
-    id: string,
-    user: Partial<Omit<User, '_id'>>
-  ): Promise<User> {
+  async updateById(id: string, user: Partial<User>): Promise<UserWithId> {
     return await this.userModel.findByIdAndUpdate(id, user, {
       new: true,
       runValidators: true

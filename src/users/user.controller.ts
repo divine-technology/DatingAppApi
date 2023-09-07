@@ -6,7 +6,9 @@ import {
   Param,
   Post,
   Put,
-  Query
+  Query,
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { User, UserWithId } from './user.schema';
@@ -34,6 +36,7 @@ import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { AuthUser, LoginResponseDto } from '../auth/auth.types';
 import { Roles } from './user.enum';
 import { Auth } from '../middleware/auth.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('User')
 @Controller('users')
@@ -53,32 +56,6 @@ export class UsersController {
   ): Promise<ResponsePaginateDto<UserWithId>> {
     return await this.usersService.getAllUsers(paginateDto);
   }
-
-  /* @Get('/for-like/:id')
-  async getAllForLikes(@Param('id') id: string): Promise<User[]> {
-    return await this.usersService.getAllForLikes(id);
-  }
-
-  @Put('/:id/like/:likedUserId')
-  async likeUser(
-    @Param('id') id: string,
-    @Param('likedUserId') likedUserId: string
-  ): Promise<string> {
-    return await this.usersService.likeUser(id, likedUserId);
-  }
-
-  @Put('/:id/dislike/:dislikedUserId')
-  async dislikeUser(
-    @Param('id') id: string,
-    @Param('dislikedUserId') dislikedUserId: string
-  ): Promise<string> {
-    return await this.usersService.dislikeUser(id, dislikedUserId);
-  } */
-
-  /* @Get('/for-like/:id')
-  async getAllForLikes(@Param('id') id: string): Promise<User[]> {
-    return await this.usersService.getAllForLikes(id);
-  } */
 
   @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all users in radius' })
@@ -142,5 +119,15 @@ export class UsersController {
   @Delete('/delete/:id')
   async deleteUser(): Promise<User> {
     return await this.usersService.deleteById();
+  }
+
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/upload/profile-image')
+  async uploadProfileImage(
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<User> {
+    console.log({ image });
+    return await this.usersService.uploadProfileImage(image);
   }
 }

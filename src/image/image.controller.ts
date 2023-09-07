@@ -37,13 +37,8 @@ export class ImageController {
   })
   @UseInterceptors(FileInterceptor('image'))
   @Post('/upload')
-  async uploadImage(
-    @UploadedFile() image: Express.Multer.File,
-    @Headers('content-type') contentType: string
-  ) {
-    console.log('Content-Type Header:', contentType);
-    console.log('Uploaded Image:', image);
-    // return this.imageService.uploadImage(image);
+  async uploadImage(@UploadedFile() image: Express.Multer.File) {
+    return this.imageService.uploadImage(image);
   }
 
   @ApiOperation({ summary: 'Get uploaded images by id' })
