@@ -20,20 +20,15 @@ import {
   ApiTags,
   getSchemaPath
 } from '@nestjs/swagger';
+import { UPDATE_USER_EXAMPLE, USER_RADIUS_EXAMPLE } from '../swagger/example';
 import {
-  CREATE_USER_EXAMPLE,
-  UPDATE_USER_EXAMPLE,
-  USER_RADIUS_EXAMPLE
-} from '../swagger/example';
-import {
-  CreateUserDto,
   UpdateUserDto,
   UserPaginateDto,
   UserRadiusDto,
   UserResponse
 } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
-import { AuthUser, LoginResponseDto } from '../auth/auth.types';
+import { AuthUser } from '../auth/auth.types';
 import { Roles } from './user.enum';
 import { Auth } from '../middleware/auth.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -127,7 +122,6 @@ export class UsersController {
   async uploadProfileImage(
     @UploadedFile() image: Express.Multer.File
   ): Promise<User> {
-    console.log({ image });
     return await this.usersService.uploadProfileImage(image);
   }
 }

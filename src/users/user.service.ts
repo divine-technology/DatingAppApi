@@ -1,9 +1,7 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
-  NotFoundException,
-  forwardRef
+  NotFoundException
 } from '@nestjs/common';
 import { User, UserWithId } from './user.schema';
 import mongoose, { isValidObjectId } from 'mongoose';
@@ -11,7 +9,6 @@ import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '../mailer/mailer.service';
 import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
-import { MessageDto } from '../message/message.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import { LikeService } from '../like/like.service';
@@ -26,9 +23,7 @@ export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly contextService: ContextService,
-    @Inject(forwardRef(() => LikeService))
     private readonly likeService: LikeService,
-    @Inject(forwardRef(() => MessageService))
     private readonly messageService: MessageService,
     private readonly imageService: ImageService,
     private jwtService: JwtService,
@@ -235,12 +230,17 @@ export class UsersService {
   }
 
   async uploadProfileImage(image): Promise<UserWithId> {
-    const imageId = (await this.imageService.uploadImage(image))._id;
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'profile/' })
+    )._id;
 
-    return await this.userRepository.updateById(
-      this.contextService.userContext.user._id,
-      { profilePicture: imageId.toString() }
-    );
+    console.log({ ctx_user: this.contextService });
+
+    const userId = this.contextService.userContext.user._id;
+
+    return await this.userRepository.updateById(userId, {
+      profilePicture: imageId.toString()
+    });
   }
 
   async deleteById(): Promise<User> {

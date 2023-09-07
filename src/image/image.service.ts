@@ -6,12 +6,15 @@ import { ImageDocument } from './image.schema';
 import { ImageRepository } from './image.repository';
 import mimeTypes from 'mime-types';
 import { v4 as uuidV4 } from 'uuid';
+import { ContextService } from '../context/context.service';
+import sharp from 'sharp';
 
 @Injectable()
 export class ImageService {
   private s3: S3;
   constructor(
     private readonly configService: ConfigService,
+    private readonly contextService: ContextService,
     private readonly imageRepository: ImageRepository
   ) {
     this.s3 = new S3({
@@ -23,13 +26,37 @@ export class ImageService {
     image: Express.Multer.File,
     options: ImageFileOptions = { path: '' }
   ): Promise<ImageDocument> {
+    const uuid = uuidV4();
     const extension = mimeTypes.extension(image.mimetype);
-    const awsKey = `${options.path}${uuidV4()}.${extension}`;
+    const awsKey = `${options.path}${uuid}.${extension}`;
+    const awsKey300 = `${options.path}${uuid}300x300.${extension}`;
+    const awsKey800 = `${options.path}${uuid}800x800.${extension}`;
+
     const uploadResult = await this.s3
       .upload({
         Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
         Body: image.buffer,
-        Key: awsKey
+        Key: `${this.contextService.userContext.user._id}/${awsKey}`
+      })
+      .promise();
+
+    this.s3
+      .upload({
+        Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
+        Body: await sharp(image.buffer)
+          .resize({ width: 300, height: 300 })
+          .toBuffer(),
+        Key: `${this.contextService.userContext.user._id}/${awsKey300}`
+      })
+      .promise();
+
+    this.s3
+      .upload({
+        Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
+        Body: await sharp(image.buffer)
+          .resize({ width: 800, height: 800 })
+          .toBuffer(),
+        Key: `${this.contextService.userContext.user._id}/${awsKey800}`
       })
       .promise();
 
@@ -41,11 +68,21 @@ export class ImageService {
     });
   }
 
-  async getSignedUrl(fileId: string): Promise<{ url: string }> {
+  async getSignedUrl(
+    fileId: string,
+    dimensions?: string
+  ): Promise<{ url: string }> {
     const file = await this.imageRepository.getById(fileId);
+    console.log({ file });
+    const awsKey = `${file.awsKey.substring(0, file.awsKey.lastIndexOf('.'))}${
+      dimensions ?? ''
+    }${file.awsKey.substring(file.awsKey.lastIndexOf('.'))}`;
+    console.log({
+      awsKey
+    });
     const signedUrl = await this.s3.getSignedUrl('getObject', {
       Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
-      Key: file.awsKey,
+      Key: awsKey,
       Expires: 60
     });
 

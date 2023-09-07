@@ -4,6 +4,7 @@ import {
   Headers,
   Param,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
 import { Image } from './image.schema';
+import { Roles } from '../users/user.enum';
+import { Auth } from '../middleware/auth.decorator';
 
 @ApiTags('Image')
 @Controller('image')
@@ -43,7 +46,11 @@ export class ImageController {
 
   @ApiOperation({ summary: 'Get uploaded images by id' })
   @Get('/:imageId')
-  async getSignedUrl(@Param('imageId') imageId: string) {
-    return this.imageService.getSignedUrl(imageId);
+  @Auth(Roles.ADMIN)
+  async getSignedUrl(
+    @Param('imageId') imageId: string,
+    @Query('dimensions') dimensions: string
+  ) {
+    return this.imageService.getSignedUrl(imageId, dimensions);
   }
 }
