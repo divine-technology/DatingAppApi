@@ -32,7 +32,10 @@ export class SchedulerService {
       gender: null,
       preference: null,
       age: null,
-      hobbies: null
+      hobbies: null,
+      profilePicture: null,
+      gallery: null,
+      lastPictureTaken: null
     };
     console.log('Scheduler radi');
     const users = await this.userService.getAllUsers(test);

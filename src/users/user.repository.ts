@@ -1,23 +1,12 @@
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  FADILMRZITYPESCRIPT,
-  Like,
-  LikeWithId,
-  Message,
-  User,
-  UserWithId
-} from './user.schema';
-import mongoose, { Model, mongo } from 'mongoose';
+import { User, UserWithId } from './user.schema';
+import { Model } from 'mongoose';
 import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { AuthUser } from '../auth/auth.types';
 
 export class UserRepository {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Like.name) private likeModel: Model<Like>,
-    @InjectModel(Message.name) private messageModel: Model<Message>
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async getAllUsers(
     paginateDto: UserPaginateDto,
@@ -42,10 +31,6 @@ export class UserRepository {
       page: limit < 1 ? 1 : page,
       data
     };
-  }
-
-  async findLikeById(id: string): Promise<Like> {
-    return await this.likeModel.findById(id);
   }
 
   /* async getAllForLike(id: string): Promise<User[]> {
@@ -77,65 +62,6 @@ export class UserRepository {
     return 'User disliked!';
   } */
 
-  async createMessage(message: Message): Promise<Message> {
-    return await this.messageModel.create(message);
-  }
-
-  async findMessage(likeId: string): Promise<FADILMRZITYPESCRIPT> {
-    const test = new mongoose.Types.ObjectId(likeId);
-    return await this.messageModel
-      .findOne({ likeId: test })
-      .populate('likeId', 'status');
-  }
-
-  async countMessages(likeId: string): Promise<number> {
-    return await this.messageModel.find({ likeId: likeId }).count();
-  }
-
-  async getFirstFiveMessages(likeId: string): Promise<Message[]> {
-    return await this.messageModel.find({ likeId: likeId }).limit(5);
-  }
-
-  async getConversation(
-    likeId: string,
-    paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
-    const { page, limit } = paginateDto;
-
-    const count = await this.countMessages(likeId);
-
-    const data = await this.messageModel
-      .find({
-        likeId: likeId
-      })
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
-
-    return {
-      count: count,
-      page: limit < 1 ? 1 : page,
-      data
-    };
-  }
-
-  async getPhotoLinks(whereArray: any[]): Promise<Message[]> {
-    return await this.messageModel
-      .find({
-        $and: [...whereArray]
-      })
-      .select('message');
-  }
-
-  async deleteMessages(likeId: string): Promise<string> {
-    try {
-      await this.messageModel.deleteMany({ likeId: likeId });
-      return 'Messages deleted';
-    } catch {
-      throw new Error('Unable to delete messages!');
-    }
-  }
-
   async getOneUser(id: string): Promise<AuthUser> {
     return await this.userModel.findById(id);
   }
@@ -148,7 +74,10 @@ export class UserRepository {
     return await this.userModel.create(user);
   }
 
-  async updateById(id: string, user: Omit<User, '_id'>): Promise<User> {
+  async updateById(
+    id: string,
+    user: Partial<Omit<User, '_id'>>
+  ): Promise<User> {
     return await this.userModel.findByIdAndUpdate(id, user, {
       new: true,
       runValidators: true
@@ -212,7 +141,10 @@ export class UserRepository {
           gender: user.gender,
           preference: user.preference,
           age: user.age,
-          hobbies: user.hobbies
+          hobbies: user.hobbies,
+          profilePicture: user.profilePicture,
+          gallery: user.gallery,
+          lastPictureTaken: user.lastName
         };
         return userResponse;
       }) || [];

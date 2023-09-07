@@ -29,11 +29,11 @@ export const NUMBER_OF_SALTS = 10;
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly authRepository: AuthRepository,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
-    private jwtService: JwtService,
-    private readonly contextService: ContextService
+    private readonly jwtService: JwtService,
+    private readonly contextService: ContextService,
+    private readonly authRepository: AuthRepository
   ) {}
 
   async test() {
@@ -71,7 +71,10 @@ export class AuthService {
         preference: fetchedUser.preference,
         age: fetchedUser.age,
         bio: fetchedUser.bio,
-        hobbies: fetchedUser.hobbies
+        hobbies: fetchedUser.hobbies,
+        profilePicture: fetchedUser.profilePicture,
+        gallery: fetchedUser.gallery,
+        lastPictureTaken: fetchedUser.lastName
       },
       token: token
     };
@@ -109,7 +112,10 @@ export class AuthService {
         preference: null,
         age: null,
         bio: null,
-        hobbies: null
+        hobbies: null,
+        profilePicture: null,
+        gallery: null,
+        lastPictureTaken: null
       };
       const finalUser = await this.authRepository.createUser(newUser);
       const token = this.jwtService.sign({ id: finalUser._id });
@@ -127,7 +133,10 @@ export class AuthService {
           preference: finalUser.preference,
           age: finalUser.age,
           bio: finalUser.bio,
-          hobbies: finalUser.hobbies
+          hobbies: finalUser.hobbies,
+          profilePicture: finalUser.profilePicture,
+          gallery: finalUser.gallery,
+          lastPictureTaken: finalUser.lastName
         },
         token: token
       };

@@ -26,7 +26,7 @@ export class LikeService {
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService, //private readonly messageService: MessageService
     @Inject(forwardRef(() => MessageService))
-    private readonly likeService: MessageService,
+    private readonly messageService: MessageService,
     private readonly contextService: ContextService
   ) {}
 
@@ -45,7 +45,11 @@ export class LikeService {
 
     const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
@@ -55,6 +59,12 @@ export class LikeService {
     };
 
     return dataToReturn;
+  }
+
+  async getAllLikes(id: string): Promise<LikeWithId[]> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getAllLikes(newId);
+    return likes;
   }
 
   async getLikes(
@@ -69,7 +79,11 @@ export class LikeService {
 
     const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
@@ -144,7 +158,11 @@ export class LikeService {
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push({_id: item._id, user: item.users[1], status: item.status });
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
@@ -228,10 +246,8 @@ export class LikeService {
     return dataToReturn;
   }
 
-  async reactWithUser(
-    reactWithUserDto: ReactWithUserDto
-  ): Promise<string> {
-    const id = this.contextService.userContext.user._id
+  async reactWithUser(reactWithUserDto: ReactWithUserDto): Promise<string> {
+    const id = this.contextService.userContext.user._id;
     let like: LikeWithErrorStatus;
     let message: Message;
     if (
@@ -244,7 +260,7 @@ export class LikeService {
         message: likedPhotoUrl
       };
 
-      if(likedPhotoUrl !== 'test url') {
+      if (likedPhotoUrl !== 'test url') {
         throw new UnauthorizedException('Not a picture!');
       }
 
@@ -253,7 +269,7 @@ export class LikeService {
         throw new UnauthorizedException('Error with liking');
       } else {
         try {
-          message = await this.likeService.sendMessage(
+          message = await this.messageService.sendMessage(
             like._id.toString(),
             messageDto
           );
@@ -262,31 +278,6 @@ export class LikeService {
           throw new UnauthorizedException(e);
         }
       }
-      /* try {
-        console.log('STEP ONE');
-        like = await this.like(id, likedUserId);
-        console.log('STEP TWO');
-        console.log('STATUS ', like.status);
-        await this.userService.sendMessage(like._id.toString(), messageDto);
-        return 'Reaction saved';
-      } catch {
-        console.log('COCK');
-        console.log('LIKE STATUS: ', like.status);
-        if (like.status === MatchStatus.ONE_LIKED) {
-          await this.likeRepository.deleteLike(like._id.toString());
-          throw new UnauthorizedException('Not a picture! (1)');
-        } else if (like.status === MatchStatus.LIKED_BACK) {
-          const likeToUpdate = new Like();
-          likeToUpdate.status = MatchStatus.ONE_LIKED;
-          await this.likeRepository.updateReaction(
-            like._id.toString(),
-            likeToUpdate
-          );
-          throw new UnauthorizedException('Not a picture! (2)');
-        } else {
-          throw new UnauthorizedException('How did you get here?');
-        }
-      } */
     } else if (reactWithUserDto.status === MatchStatus.DISLIKED) {
       return await this.dislike(id, reactWithUserDto.likedUserId);
     } else if (reactWithUserDto.status === MatchStatus.BLOCKED) {
@@ -369,7 +360,7 @@ export class LikeService {
       return 'Reaction saved';
     } else {
       if (
-        doesMatchExist.users[1].toString() === newId.toString() &&
+        // doesMatchExist.users[1].toString() === newId.toString() &&
         doesMatchExist.status === MatchStatus.ONE_LIKED
       ) {
         like.users = [newId, newlikedUserId];
@@ -435,16 +426,16 @@ export class LikeService {
         doesMatchExist.status === MatchStatus.BLOCKED &&
         doesMatchExist.users[0].toString() === newId.toString()
       ) {
-        const links = await this.userService.getPhotoLinks(whereArray);
+        const links = await this.messageService.getPhotoLinks(whereArray);
         console.log('PHOTO URLS: ', links);
-        await this.userService.deleteMessages(doesMatchExist._id.toString());
+        await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else if (
         doesMatchExist.status === MatchStatus.BLOCKED_BACK &&
         doesMatchExist.users[1].toString() === newId.toString()
       ) {
-        const links = await this.userService.getPhotoLinks(whereArray);
+        const links = await this.messageService.getPhotoLinks(whereArray);
         console.log('PHOTO URLS: ', links);
-        await this.userService.deleteMessages(doesMatchExist._id.toString());
+        await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else {
         throw new UnauthorizedException();
       }
@@ -453,6 +444,11 @@ export class LikeService {
     } else {
       throw new UnauthorizedException();
     }
+  }
+
+  async deleteLikeByUserId(userId: string) {
+    const id = new mongoose.Types.ObjectId(userId);
+    return await this.likeRepository.deleteLikeByUserId(id);
   }
 
   async findLikeById(likeId: string) {

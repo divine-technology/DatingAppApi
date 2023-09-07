@@ -22,42 +22,33 @@ import { LikeModule } from './like/like.module';
 import { MessageModule } from './message/message.module';
 import { MessageService } from './message/message.service';
 import { ContextService } from './context/context.service';
+import { ImageModule } from './image/image.module';
+import { ImageService } from './image/image.service';
+import { ImageController } from './image/image.controller';
+import { AppConfigModule } from './config/appConfig.module';
+import { CoreModule } from './core.module';
+import { AppConfigService } from './config/appConfig.service';
 
 @Module({
   imports: [
-    UsersModule,
+    AppConfigModule,
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
-        uri: config.get<string>('MONGO_URI')
-      })
+      imports: [AppConfigModule],
+      useFactory: async (configService: AppConfigService) => ({
+        uri: configService.dbUrl
+      }),
+      inject: [AppConfigService]
     }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: config.get<string | number>('JWT_EXPIRE')
-        }
-      })
-    }),
+    CoreModule,
+    UsersModule,
     MailerModule,
     ScheduleModule.forRoot(),
     AuthModule,
     LikeModule,
-    MessageModule
+    MessageModule,
+    ImageModule
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    UsersService,
-    SchedulerService,
-    AuthService,
-    LikeService,
-    MessageService,
-    ContextService
-  ]
+  providers: [AppService]
 })
 export class AppModule {}

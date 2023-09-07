@@ -2,9 +2,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserWithId } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
+import { UserRepository } from '../users/user.repository';
 
 export class AuthRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(private userRepository: UserRepository) {}
   async test() {
     return await 'TESTING';
   }
@@ -17,7 +18,7 @@ export class AuthRepository {
     password: string;
   }): Promise<User> {
     const newPassword = { password: password };
-    return await this.userModel.findByIdAndUpdate(id, newPassword);
+    return await this.userRepository.updateById(id, newPassword);
   }
 
   async updateRecoveryTokenByEmail({
@@ -34,13 +35,10 @@ export class AuthRepository {
       forgotPasswordTimestamp: timestamp
     };
     console.log('ID: ', id);
-    return await this.userModel.findByIdAndUpdate(
-      new mongoose.Types.ObjectId(id),
-      updatedToken
-    );
+    return await this.userRepository.updateById(id, updatedToken);
   }
 
   async createUser(user: User): Promise<UserWithId> {
-    return await this.userModel.create(user);
+    return await this.userRepository.createUser(user);
   }
 }

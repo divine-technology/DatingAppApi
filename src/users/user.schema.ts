@@ -117,6 +117,18 @@ export class User {
   @ApiProperty()
   @Prop()
   hobbies: string[];
+
+  @ApiProperty()
+  @Prop()
+  profilePicture: string;
+
+  @ApiProperty()
+  @Prop()
+  gallery: string[];
+
+  @ApiProperty()
+  @Prop()
+  lastPictureTaken: string;
 }
 
 export class UserWithId extends User {

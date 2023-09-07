@@ -100,6 +100,15 @@ export class AuthUser {
 
   @ApiProperty()
   hobbies: string[];
+
+  @ApiProperty({ required: false })
+  profilePicture: string;
+
+  @ApiProperty({ required: false })
+  gallery: string[];
+
+  @ApiProperty({ required: false })
+  lastPictureTaken: string;
 }
 
 export class AuthResponseDto {

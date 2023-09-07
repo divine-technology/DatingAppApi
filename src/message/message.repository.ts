@@ -1,8 +1,15 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { FADILMRZITYPESCRIPT, Message, MessageWithDate } from '../users/user.schema';
+import {
+  FADILMRZITYPESCRIPT,
+  Message,
+  MessageWithDate
+} from '../users/user.schema';
 import mongoose, { Model, mongo } from 'mongoose';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
-import { MessageResponseDto, MultipleMessagesResponseDto } from './message.types';
+import {
+  MessageResponseDto,
+  MultipleMessagesResponseDto
+} from './message.types';
 
 export class MessageRepository {
   constructor(
@@ -38,7 +45,7 @@ export class MessageRepository {
     likeId: string,
     paginateDto: PaginateDto
   ): Promise<ResponsePaginateDto<Message>> {
-    const likeIdObj = new mongoose.Types.ObjectId(likeId)
+    const likeIdObj = new mongoose.Types.ObjectId(likeId);
     const { page, limit } = paginateDto;
 
     const count = await this.countMessages(likeId);
@@ -66,7 +73,7 @@ export class MessageRepository {
     likeIds: mongoose.Types.ObjectId[]
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const { page = 1, limit = 10 } = paginateDto;
-  
+
     const latestMessages = await this.messageModel.aggregate([
       {
         $match: {
@@ -103,7 +110,7 @@ export class MessageRepository {
           localField: 'latestMessage.likeId',
           foreignField: '_id',
           as: 'likesData'
-        },
+        }
       },
       {
         $lookup: {
@@ -111,7 +118,7 @@ export class MessageRepository {
           localField: 'likesData.users',
           foreignField: '_id',
           as: 'usersData'
-        },
+        }
       },
       {
         $addFields: {
@@ -125,7 +132,12 @@ export class MessageRepository {
       },
       {
         $addFields: {
-          usersData: '$usersData' 
+          usersData: '$usersData'
+        }
+      },
+      {
+        $sort: {
+          'latestMessage.createdAt': -1
         }
       },
       {
@@ -135,40 +147,67 @@ export class MessageRepository {
         $limit: Number(limit)
       }
     ]);
-  
+
+    latestMessages.forEach((message) => console.log(message.latestMessage._id));
+
     const totalCount = latestMessages.length;
-  
-    const messagesWithSelectedFields: MessageResponseDto[]= latestMessages.map((message) => ({
-      _id: message.latestMessage._id,
-      likeId: message.latestMessage.likeId,
-      fromUser: {
-        _id: message.fromUser._id,
-        firstName: message.fromUser.firstName,
-        lastName: message.fromUser.lastName,
-        role: message.fromUser.role,
-        gender: message.fromUser.gender,
-        age: message.fromUser.age
-      },
-      toUser: {
-        _id: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1]._id.toString() : message.usersData[0]._id.toString(),
-        firstName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].firstName : message.usersData[0].firstName,
-        lastName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].lastName : message.usersData[0].lastName,
-        role: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].role : message.usersData[0].role,
-        gender: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].gender : message.usersData[0].gender,
-        age: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].age : message.usersData[0].age
-      },
-      message: message.latestMessage.message,
-      createdAt: message.latestMessage.createdAt,
-      updatedAt: message.latestMessage.updatedAt
-    }));
-  
+
+    const messagesWithSelectedFields: MessageResponseDto[] = latestMessages.map(
+      (message) => ({
+        _id: message.latestMessage._id,
+        likeId: message.latestMessage.likeId,
+        fromUser: {
+          _id: message.fromUser._id,
+          firstName: message.fromUser.firstName,
+          lastName: message.fromUser.lastName,
+          role: message.fromUser.role,
+          gender: message.fromUser.gender,
+          age: message.fromUser.age
+        },
+        toUser: {
+          _id:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1]._id.toString()
+              : message.usersData[0]._id.toString(),
+          firstName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].firstName
+              : message.usersData[0].firstName,
+          lastName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].lastName
+              : message.usersData[0].lastName,
+          role:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].role
+              : message.usersData[0].role,
+          gender:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].gender
+              : message.usersData[0].gender,
+          age:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].age
+              : message.usersData[0].age
+        },
+        message: message.latestMessage.message,
+        createdAt: message.latestMessage.createdAt,
+        updatedAt: message.latestMessage.updatedAt
+      })
+    );
+
     return {
       count: totalCount,
       page: limit < 1 ? 1 : Number(page),
       data: messagesWithSelectedFields
     };
   }
-  
 
   async getLikeRequestChats(
     userId: mongoose.Types.ObjectId,
@@ -176,7 +215,7 @@ export class MessageRepository {
     likeRequestIds: mongoose.Types.ObjectId[]
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const { page = 1, limit = 10 } = paginateDto;
-  
+
     const latestMessages = await this.messageModel.aggregate([
       {
         $match: {
@@ -208,7 +247,7 @@ export class MessageRepository {
           localField: 'latestMessage.likeId',
           foreignField: '_id',
           as: 'likesData'
-        },
+        }
       },
       {
         $lookup: {
@@ -216,7 +255,7 @@ export class MessageRepository {
           localField: 'likesData.users',
           foreignField: '_id',
           as: 'usersData'
-        },
+        }
       },
       {
         $addFields: {
@@ -230,7 +269,12 @@ export class MessageRepository {
       },
       {
         $addFields: {
-          usersData: '$usersData' 
+          usersData: '$usersData'
+        }
+      },
+      {
+        $sort: {
+          'latestMessage.createdAt': -1
         }
       },
       {
@@ -240,33 +284,59 @@ export class MessageRepository {
         $limit: Number(limit)
       }
     ]);
-  
+
     const totalCount = latestMessages.length;
-  
-    const messagesWithSelectedFields: MessageResponseDto[]= latestMessages.map((message) => ({
-      _id: message.latestMessage._id,
-      likeId: message.latestMessage.likeId,
-      fromUser: {
-        _id: message.fromUser._id,
-        firstName: message.fromUser.firstName,
-        lastName: message.fromUser.lastName,
-        role: message.fromUser.role,
-        gender: message.fromUser.gender,
-        age: message.fromUser.age
-      },
-      toUser: {
-        _id: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1]._id.toString() : message.usersData[0]._id.toString(),
-        firstName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].firstName : message.usersData[0].firstName,
-        lastName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].lastName : message.usersData[0].lastName,
-        role: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].role : message.usersData[0].role,
-        gender: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].gender : message.usersData[0].gender,
-        age: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].age : message.usersData[0].age
-      },
-      message: message.latestMessage.message,
-      createdAt: message.latestMessage.createdAt,
-      updatedAt: message.latestMessage.updatedAt
-    }));
-  
+
+    const messagesWithSelectedFields: MessageResponseDto[] = latestMessages.map(
+      (message) => ({
+        _id: message.latestMessage._id,
+        likeId: message.latestMessage.likeId,
+        fromUser: {
+          _id: message.fromUser._id,
+          firstName: message.fromUser.firstName,
+          lastName: message.fromUser.lastName,
+          role: message.fromUser.role,
+          gender: message.fromUser.gender,
+          age: message.fromUser.age
+        },
+        toUser: {
+          _id:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1]._id.toString()
+              : message.usersData[0]._id.toString(),
+          firstName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].firstName
+              : message.usersData[0].firstName,
+          lastName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].lastName
+              : message.usersData[0].lastName,
+          role:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].role
+              : message.usersData[0].role,
+          gender:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].gender
+              : message.usersData[0].gender,
+          age:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].age
+              : message.usersData[0].age
+        },
+        message: message.latestMessage.message,
+        createdAt: message.latestMessage.createdAt,
+        updatedAt: message.latestMessage.updatedAt
+      })
+    );
+
     return {
       count: totalCount,
       page: limit < 1 ? 1 : Number(page),
@@ -280,7 +350,7 @@ export class MessageRepository {
     blockIds: mongoose.Types.ObjectId[]
   ): Promise<ResponsePaginateDto<MessageResponseDto>> {
     const { page = 1, limit = 10 } = paginateDto;
-  
+
     const latestMessages = await this.messageModel.aggregate([
       {
         $match: {
@@ -312,7 +382,7 @@ export class MessageRepository {
           localField: 'latestMessage.likeId',
           foreignField: '_id',
           as: 'likesData'
-        },
+        }
       },
       {
         $lookup: {
@@ -320,7 +390,7 @@ export class MessageRepository {
           localField: 'likesData.users',
           foreignField: '_id',
           as: 'usersData'
-        },
+        }
       },
       {
         $addFields: {
@@ -334,7 +404,12 @@ export class MessageRepository {
       },
       {
         $addFields: {
-          usersData: '$usersData' 
+          usersData: '$usersData'
+        }
+      },
+      {
+        $sort: {
+          'latestMessage.createdAt': -1
         }
       },
       {
@@ -345,34 +420,58 @@ export class MessageRepository {
       }
     ]);
 
-    console.log('LATEST MESSAGE: ', latestMessages);
-  
     const totalCount = latestMessages.length;
-  
-    const messagesWithSelectedFields: MessageResponseDto[]= latestMessages.map((message) => ({
-      _id: message.latestMessage._id,
-      likeId: message.latestMessage.likeId,
-      fromUser: {
-        _id: message.fromUser._id,
-        firstName: message.fromUser.firstName,
-        lastName: message.fromUser.lastName,
-        role: message.fromUser.role,
-        gender: message.fromUser.gender,
-        age: message.fromUser.age
-      },
-      toUser: {
-        _id: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1]._id.toString() : message.usersData[0]._id.toString(),
-        firstName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].firstName : message.usersData[0].firstName,
-        lastName: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].lastName : message.usersData[0].lastName,
-        role: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].role : message.usersData[0].role,
-        gender: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].gender : message.usersData[0].gender,
-        age: message.fromUser._id.toString() === message.usersData[0]._id.toString() ? message.usersData[1].age : message.usersData[0].age
-      },
-      message: message.latestMessage.message,
-      createdAt: message.latestMessage.createdAt,
-      updatedAt: message.latestMessage.updatedAt
-    }));
-  
+
+    const messagesWithSelectedFields: MessageResponseDto[] = latestMessages.map(
+      (message) => ({
+        _id: message.latestMessage._id,
+        likeId: message.latestMessage.likeId,
+        fromUser: {
+          _id: message.fromUser._id,
+          firstName: message.fromUser.firstName,
+          lastName: message.fromUser.lastName,
+          role: message.fromUser.role,
+          gender: message.fromUser.gender,
+          age: message.fromUser.age
+        },
+        toUser: {
+          _id:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1]._id.toString()
+              : message.usersData[0]._id.toString(),
+          firstName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].firstName
+              : message.usersData[0].firstName,
+          lastName:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].lastName
+              : message.usersData[0].lastName,
+          role:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].role
+              : message.usersData[0].role,
+          gender:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].gender
+              : message.usersData[0].gender,
+          age:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].age
+              : message.usersData[0].age
+        },
+        message: message.latestMessage.message,
+        createdAt: message.latestMessage.createdAt,
+        updatedAt: message.latestMessage.updatedAt
+      })
+    );
+
     return {
       count: totalCount,
       page: limit < 1 ? 1 : Number(page),
@@ -391,6 +490,17 @@ export class MessageRepository {
   async deleteMessages(likeId: string): Promise<string> {
     try {
       await this.messageModel.deleteMany({ likeId: likeId });
+      return 'Messages deleted';
+    } catch {
+      throw new Error('Unable to delete messages!');
+    }
+  }
+
+  async deleteManyMessages(
+    likeIds: mongoose.Types.ObjectId[]
+  ): Promise<string> {
+    try {
+      await this.messageModel.deleteMany({ likeId: { $in: likeIds } });
       return 'Messages deleted';
     } catch {
       throw new Error('Unable to delete messages!');

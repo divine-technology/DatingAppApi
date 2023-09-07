@@ -62,6 +62,12 @@ export class UpdateUserDto {
   bio: string;
   @ApiProperty({ required: false })
   hobbies: string[];
+  @ApiProperty({ required: false })
+  profilePicture: string;
+  @ApiProperty({ required: false })
+  gallery: string[];
+  @ApiProperty({ required: false })
+  lastPictureTaken: string;
 }
 
 export class UserPaginateDto extends PaginateDto {
@@ -89,6 +95,12 @@ export class UserPaginateDto extends PaginateDto {
   age: number;
   @ApiProperty({ required: false })
   hobbies: string[];
+  @ApiProperty({ required: false })
+  profilePicture: string;
+  @ApiProperty({ required: false })
+  gallery: string[];
+  @ApiProperty({ required: false })
+  lastPictureTaken: string;
 }
 
 export class UserResponse {
@@ -110,6 +122,12 @@ export class UserResponse {
   age: number;
   @ApiProperty()
   hobbies: string[];
+  @ApiProperty({ required: false })
+  profilePicture: string;
+  @ApiProperty({ required: false })
+  gallery: string[];
+  @ApiProperty({ required: false })
+  lastPictureTaken: string;
 }
 
 export class PaginatedUser extends PaginatedRequestDto(User) {}

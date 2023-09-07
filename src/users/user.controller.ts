@@ -130,6 +130,7 @@ export class UsersController {
     return await this.usersService.updateById(id, user);
   }
 
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Delete user' })
   @ApiExtraModels(User)
   @ApiResponse({
@@ -139,10 +140,7 @@ export class UsersController {
     }
   })
   @Delete('/delete/:id')
-  async deleteUser(
-    @Param('id')
-    id: string
-  ): Promise<User> {
-    return await this.usersService.deleteById(id);
+  async deleteUser(): Promise<User> {
+    return await this.usersService.deleteById();
   }
 }

@@ -2,13 +2,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Like, LikeWithId, User } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
-import { LikeResponseDto } from './like.types';
 
 export class LikeRepository {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Like.name) private likeModel: Model<Like>
-  ) {}
+  constructor(@InjectModel(Like.name) private likeModel: Model<Like>) {}
 
   async test() {
     return await 'LIKES TEST';
@@ -16,12 +12,6 @@ export class LikeRepository {
 
   async getLikesByUserId(id: string): Promise<Like[]> {
     return this.likeModel.find({ users: id }).exec();
-  }
-
-  async getAllForLikes(excludedUserIds: string[], id: string): Promise<User[]> {
-    return this.userModel
-      .find({ _id: { $nin: excludedUserIds, $ne: id } })
-      .exec();
   }
 
   async getBothLikes(
@@ -52,6 +42,12 @@ export class LikeRepository {
       page: limit < 1 ? 1 : page,
       data
     };
+  }
+
+  async getAllLikes(id: mongoose.Types.ObjectId): Promise<LikeWithId[]> {
+    return await this.likeModel.find({
+      $or: [{ 'users.0': id }, { 'users.1': id }]
+    });
   }
 
   async getLikes(
@@ -284,11 +280,19 @@ export class LikeRepository {
   }
 
   async findLikeById(id: string): Promise<Like> {
-    return await this.likeModel.findById(id).populate('users', '_id firstName lastName email gender bio age');
+    return await this.likeModel
+      .findById(id)
+      .populate('users', '_id firstName lastName email gender bio age');
   }
 
   async deleteLike(id: string): Promise<Like> {
     return await this.likeModel.findByIdAndDelete(id);
+  }
+
+  async deleteLikeByUserId(id: mongoose.Types.ObjectId) {
+    return await this.likeModel.deleteMany({
+      $or: [{ 'users.0': id }, { 'users.1': id }]
+    });
   }
 
   async updateReaction(id: string, like: Like): Promise<LikeWithId> {

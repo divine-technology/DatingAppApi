@@ -67,7 +67,10 @@ export class AuthGuard implements CanActivate {
           preference: user.preference,
           age: user.age,
           bio: user.bio,
-          hobbies: user.hobbies
+          hobbies: user.hobbies,
+          profilePicture: user.profilePicture,
+          gallery: user.gallery,
+          lastPictureTaken: user.lastName
         };
         return dataToReturn;
       } catch (error) {

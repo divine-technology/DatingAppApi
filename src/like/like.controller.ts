@@ -36,6 +36,18 @@ export class LikeController {
   }
 
   @ApiOperation({ summary: 'Get all likes from user' })
+  @ApiExtraModels(Like)
+  @ApiResponse({
+    status: 200,
+    type: Like,
+    isArray: true
+  })
+  @Get('/get-all-likes/:id')
+  async getAllLikes(@Param('id') id: string): Promise<LikeWithId[]> {
+    return await this.likeService.getAllLikes(id);
+  }
+
+  @ApiOperation({ summary: 'Get likes from user' })
   @ApiExtraModels(ResponsePaginateDto<Like>)
   @ApiResponse({
     status: 200,

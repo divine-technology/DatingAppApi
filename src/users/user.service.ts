@@ -26,6 +26,7 @@ import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import { LikeService } from '../like/like.service';
 import { AuthUser } from '../auth/auth.types';
+import { MessageService } from '../message/message.service';
 
 export const numberOfSalts = 10;
 
@@ -36,6 +37,8 @@ export class UsersService {
     private readonly contextService: ContextService,
     @Inject(forwardRef(() => LikeService))
     private readonly likeService: LikeService,
+    @Inject(forwardRef(() => MessageService))
+    private readonly messageService: MessageService,
     private jwtService: JwtService,
     private mailerService: MailerService
   ) {}
@@ -316,21 +319,6 @@ export class UsersService {
   //   }
   // }
 
-  async getConversation(
-    likeId: string,
-    paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDto<Message>> {
-    return await this.userRepository.getConversation(likeId, paginateDto);
-  }
-
-  async deleteMessages(likeId: string): Promise<string> {
-    return await this.userRepository.deleteMessages(likeId);
-  }
-
-  async getPhotoLinks(whereArray: any[]): Promise<Message[]> {
-    return await this.userRepository.getPhotoLinks(whereArray);
-  }
-
   async getOneUser(id: string): Promise<AuthUser> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid id parameter');
@@ -351,8 +339,11 @@ export class UsersService {
       location: res.location,
       preference: res.preference,
       createdAccountTimeStamp: res.createdAccountTimeStamp,
-      hobbies: []
-    }
+      hobbies: [],
+      profilePicture: res.profilePicture,
+      gallery: res.gallery,
+      lastPictureTaken: res.lastName
+    };
     return dataToReturn;
   }
 
@@ -458,7 +449,21 @@ export class UsersService {
     return await this.userRepository.updateById(id, user);
   }
 
-  async deleteById(id: string): Promise<User> {
-    return await this.userRepository.deleteById(id);
+  async deleteById(): Promise<User> {
+    const userId = this.contextService.userContext.user._id;
+    const likes = await this.likeService.getAllLikes(userId);
+
+    const likeIds: mongoose.Types.ObjectId[] = [];
+    likes.forEach((like) => likeIds.push(like._id));
+
+    const deletedLikes = await this.likeService.deleteLikeByUserId(userId);
+    console.log('Likes have been deleted: ', deletedLikes);
+
+    const deletedMessages = await this.messageService.deleteManyMessages(
+      likeIds
+    );
+    console.log('Messages have been deleted: ', deletedMessages);
+
+    return await this.userRepository.deleteById(userId);
   }
 }
