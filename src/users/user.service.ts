@@ -238,12 +238,22 @@ export class UsersService {
       await this.imageService.uploadImage(image, { path: 'profile/' })
     )._id;
 
-    console.log({ ctx_user: this.contextService });
-
     const userId = this.contextService.userContext.user._id;
 
     return await this.userRepository.updateById(userId, {
       profilePicture: imageId.toString()
+    });
+  }
+
+  async uploadSelfieImage(image): Promise<UserWithId> {
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'selfie/' })
+    )._id;
+
+    const userId = this.contextService.userContext.user._id;
+
+    return await this.userRepository.updateById(userId, {
+      lastPictureTaken: imageId.toString()
     });
   }
 

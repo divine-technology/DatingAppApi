@@ -124,4 +124,13 @@ export class UsersController {
   ): Promise<User> {
     return await this.usersService.uploadProfileImage(image);
   }
+
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/upload/selfie-image')
+  async uploadSelfieImage(
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<User> {
+    return await this.usersService.uploadSelfieImage(image);
+  }
 }

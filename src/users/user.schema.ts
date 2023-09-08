@@ -20,6 +20,10 @@ export class Message {
   @ApiProperty()
   @Prop()
   message: string;
+
+  @ApiProperty()
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Image', default: null })
+  image?: mongoose.Types.ObjectId;
 }
 
 export class MessageWithDate extends Message {
