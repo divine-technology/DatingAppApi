@@ -229,6 +229,10 @@ export class UsersService {
     return await this.userRepository.updateById(id, user);
   }
 
+  async createUser(user: User): Promise<UserWithId> {
+    return await this.userRepository.createUser(user);
+  }
+
   async uploadProfileImage(image): Promise<UserWithId> {
     const imageId = (
       await this.imageService.uploadImage(image, { path: 'profile/' })

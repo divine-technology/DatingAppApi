@@ -39,6 +39,7 @@ export class AuthRepository {
   }
 
   async createUser(user: User): Promise<UserWithId> {
+    console.log('DODJES LI OVDJE?');
     return await this.userRepository.createUser(user);
   }
 }

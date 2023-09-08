@@ -279,7 +279,7 @@ export class LikeRepository {
     });
   }
 
-  async findLikeById(id: string): Promise<Like> {
+  async findLikeById(id: mongoose.Types.ObjectId): Promise<LikeWithId> {
     return await this.likeModel
       .findById(id)
       .populate('users', '_id firstName lastName email gender bio age');

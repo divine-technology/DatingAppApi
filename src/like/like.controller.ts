@@ -120,4 +120,15 @@ export class LikeController {
   ): Promise<string> {
     return await this.likeService.reactWithUser(reactWithUserDto);
   }
+
+  @Auth(Roles.ADMIN)
+  @ApiOperation({ summary: 'Block a user' })
+  @ApiResponse({
+    status: 200,
+    type: String
+  })
+  @Post('/block/:likeId')
+  async blockByLikeId(@Param('likeId') likeId: string): Promise<string> {
+    return await this.likeService.blockById(likeId);
+  }
 }

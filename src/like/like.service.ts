@@ -407,6 +407,38 @@ export class LikeService {
     }
   }
 
+  async blockById(likeId: string): Promise<string> {
+    const fetchedLike = await this.likeRepository.findLikeById(
+      new mongoose.Types.ObjectId(likeId)
+    );
+    const currentUser = this.contextService.userContext.user._id;
+    console.log('CURRENT USER: ', currentUser);
+    console.log('FETCHED LIKE: ', fetchedLike);
+    const like = new Like();
+
+    if (fetchedLike) {
+      if (
+        fetchedLike.status === MatchStatus.ONE_LIKED ||
+        fetchedLike.status === MatchStatus.LIKED_BACK
+      ) {
+        if (fetchedLike.users[0]._id.toString() === currentUser) {
+          like.status = MatchStatus.BLOCKED;
+        } else {
+          like.status = MatchStatus.BLOCKED_BACK;
+        }
+        await this.likeRepository.updateReaction(
+          (fetchedLike as LikeWithId)._id.toString(),
+          like
+        );
+        return 'Reaction saved (BLOCKED / BLOCKED BACK)';
+      } else {
+        throw new UnauthorizedException();
+      }
+    } else {
+      throw new UnauthorizedException();
+    }
+  }
+
   async unblock(id: string, likedUserId: string): Promise<string> {
     const matchArray = [id, likedUserId];
     const doesMatchExist = await this.likeRepository.findLike(matchArray);
@@ -452,6 +484,8 @@ export class LikeService {
   }
 
   async findLikeById(likeId: string) {
-    return await this.likeRepository.findLikeById(likeId);
+    return await this.likeRepository.findLikeById(
+      new mongoose.Types.ObjectId(likeId)
+    );
   }
 }

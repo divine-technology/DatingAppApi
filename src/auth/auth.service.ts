@@ -88,6 +88,7 @@ export class AuthService {
 
   async createUser(user: CreateUserDto): Promise<AuthResponseDto> {
     const { email, password } = user;
+    console.log(`Email: ${email} password: ${password}`);
     const lowercaseEmail = email.toLowerCase();
     const conditionArray = [];
     conditionArray.push({ email });
@@ -117,7 +118,7 @@ export class AuthService {
         gallery: null,
         lastPictureTaken: null
       };
-      const finalUser = await this.authRepository.createUser(newUser);
+      const finalUser = await this.userService.createUser(newUser);
       const token = this.jwtService.sign({ id: finalUser._id });
 
       const dataToReturn: AuthResponseDto = {
