@@ -22,8 +22,8 @@ export class Message {
   message: string;
 
   @ApiProperty()
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'Image', default: null })
-  image?: mongoose.Types.ObjectId;
+  @Prop()
+  image?: string;
 }
 
 export class MessageWithDate extends Message {
@@ -133,6 +133,18 @@ export class User {
   @ApiProperty()
   @Prop()
   lastPictureTaken: string;
+
+  @ApiProperty()
+  @Prop()
+  prefferedAgeFrom: number;
+
+  @ApiProperty()
+  @Prop()
+  prefferedAgeTo: number;
+
+  @ApiProperty()
+  @Prop()
+  prefferedRadius: number;
 }
 
 export class UserWithId extends User {

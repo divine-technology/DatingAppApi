@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserWithId } from './user.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { AuthUser } from '../auth/auth.types';
@@ -90,7 +90,7 @@ export class UserRepository {
     userRadiusDto: UserRadiusDto,
     myUser: AuthUser,
     paginateDto: PaginateDto,
-    arrayOfIds: string[]
+    arrayOfIds: mongoose.Types.ObjectId[]
   ): Promise<ResponsePaginateDto<UserResponse>> {
     const { location, radius } = userRadiusDto;
     const { page = 1, limit = 100, sort = 1, sortBy = '_id' } = paginateDto;
@@ -109,7 +109,16 @@ export class UserRepository {
           _id: {
             $nin: [...arrayOfIds, myUser._id]
           },
-          $and: [{ preference: myUser.gender }, { gender: myUser.preference }]
+          $and: [
+            { preference: myUser.gender },
+            { gender: myUser.preference },
+            {
+              age: {
+                $gte: myUser.prefferedAgeFrom,
+                $lte: myUser.prefferedAgeTo
+              }
+            }
+          ]
         }
       },
       {
@@ -138,11 +147,12 @@ export class UserRepository {
           role: user.role,
           gender: user.gender,
           preference: user.preference,
+          bio: user.bio,
           age: user.age,
           hobbies: user.hobbies,
           profilePicture: user.profilePicture,
           gallery: user.gallery,
-          lastPictureTaken: user.lastName
+          lastPictureTaken: user.lastPictureTaken
         };
         return userResponse;
       }) || [];

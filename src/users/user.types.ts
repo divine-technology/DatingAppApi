@@ -68,6 +68,12 @@ export class UpdateUserDto {
   gallery: string[];
   @ApiProperty({ required: false })
   lastPictureTaken: string;
+  @ApiProperty({ required: false })
+  prefferedAgeFrom: number;
+  @ApiProperty({ required: false })
+  prefferedAgeTo: number;
+  @ApiProperty({ required: false })
+  prefferedRadius: number;
 }
 
 export class UserPaginateDto extends PaginateDto {
@@ -118,6 +124,8 @@ export class UserResponse {
   gender: string;
   @ApiProperty()
   preference: string;
+  @ApiProperty()
+  bio: string;
   @ApiProperty()
   age: number;
   @ApiProperty()

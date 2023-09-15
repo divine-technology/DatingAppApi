@@ -74,7 +74,10 @@ export class AuthService {
         hobbies: fetchedUser.hobbies,
         profilePicture: fetchedUser.profilePicture,
         gallery: fetchedUser.gallery,
-        lastPictureTaken: fetchedUser.lastName
+        lastPictureTaken: fetchedUser.lastName,
+        prefferedAgeFrom: fetchedUser.prefferedAgeFrom,
+        prefferedAgeTo: fetchedUser.prefferedAgeTo,
+        prefferedRadius: fetchedUser.prefferedRadius
       },
       token: token
     };
@@ -116,7 +119,10 @@ export class AuthService {
         hobbies: null,
         profilePicture: null,
         gallery: null,
-        lastPictureTaken: null
+        lastPictureTaken: null,
+        prefferedAgeFrom: null,
+        prefferedAgeTo: null,
+        prefferedRadius: null
       };
       const finalUser = await this.userService.createUser(newUser);
       const token = this.jwtService.sign({ id: finalUser._id });
@@ -137,7 +143,10 @@ export class AuthService {
           hobbies: finalUser.hobbies,
           profilePicture: finalUser.profilePicture,
           gallery: finalUser.gallery,
-          lastPictureTaken: finalUser.lastName
+          lastPictureTaken: finalUser.lastName,
+          prefferedAgeFrom: finalUser.prefferedAgeFrom,
+          prefferedAgeTo: finalUser.prefferedAgeTo,
+          prefferedRadius: finalUser.prefferedRadius
         },
         token: token
       };

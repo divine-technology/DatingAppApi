@@ -33,7 +33,10 @@ export const UPDATE_USER_EXAMPLE = {
       location: {
         type: 'Point',
         coordinates: [44.20169, 17.90397]
-      }
+      },
+      prefferedAgeFrom: 13,
+      prefferedAgeTo: 18,
+      prefferedRadius: 70000
     }
   }
 };

@@ -118,6 +118,7 @@ export class LikeController {
   async reactWithUser(
     @Body() reactWithUserDto: ReactWithUserDto
   ): Promise<string> {
+    console.log('BAJOJAJO BAJOJAJO');
     return await this.likeService.reactWithUser(reactWithUserDto);
   }
 

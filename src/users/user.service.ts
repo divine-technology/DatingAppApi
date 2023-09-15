@@ -119,10 +119,13 @@ export class UsersService {
       location: res.location,
       preference: res.preference,
       createdAccountTimeStamp: res.createdAccountTimeStamp,
-      hobbies: [],
+      hobbies: res.hobbies,
       profilePicture: res.profilePicture,
       gallery: res.gallery,
-      lastPictureTaken: res.lastName
+      lastPictureTaken: res.lastPictureTaken,
+      prefferedAgeFrom: res.prefferedAgeFrom,
+      prefferedAgeTo: res.prefferedAgeTo,
+      prefferedRadius: res.prefferedRadius
     };
     return dataToReturn;
   }
@@ -190,28 +193,18 @@ export class UsersService {
       }
     );
 
-    const arrayOfIds: string[] = [];
-    myBlocksBy.data.forEach((block) =>
-      arrayOfIds.push(block.user._id.toString())
-    );
-    myDislikedBy.data.forEach((dislike) =>
-      arrayOfIds.push(dislike.user._id.toString())
-    );
+    const arrayOfIds: mongoose.Types.ObjectId[] = [];
+    myBlocksBy.data.forEach((block) => arrayOfIds.push(block.user._id));
+    myDislikedBy.data.forEach((dislike) => arrayOfIds.push(dislike.user._id));
     myBlocksBack.data.forEach((blockBack) =>
-      arrayOfIds.push(blockBack.user._id.toString())
+      arrayOfIds.push(blockBack.user._id)
     );
-    myBlocks.data.forEach((myBlock) =>
-      arrayOfIds.push(myBlock.user._id.toString())
-    );
+    myBlocks.data.forEach((myBlock) => arrayOfIds.push(myBlock.user._id));
     myBothLikes.data.forEach((myBothLike) =>
-      arrayOfIds.push(myBothLike.user._id.toString())
+      arrayOfIds.push(myBothLike.user._id)
     );
-    myDislikes.data.forEach((myDislike) =>
-      arrayOfIds.push(myDislike.user._id.toString())
-    );
-    myLikes.data.forEach((myLike) =>
-      arrayOfIds.push(myLike.user._id.toString())
-    );
+    myDislikes.data.forEach((myDislike) => arrayOfIds.push(myDislike.user._id));
+    myLikes.data.forEach((myLike) => arrayOfIds.push(myLike.user._id));
 
     return await this.userRepository.getUsersWithinRadius(
       userRadiusDto,
@@ -254,6 +247,23 @@ export class UsersService {
 
     return await this.userRepository.updateById(userId, {
       lastPictureTaken: imageId.toString()
+    });
+  }
+
+  async uploadGalleryImage(image): Promise<UserWithId> {
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'gallery/' })
+    )._id;
+
+    const userId = this.contextService.userContext.user._id;
+
+    const testArr = [];
+    const userGallery = this.contextService.userContext.user.gallery;
+    userGallery?.forEach((image) => testArr.push(image));
+    testArr.push(imageId);
+
+    return await this.userRepository.updateById(userId, {
+      gallery: userGallery
     });
   }
 

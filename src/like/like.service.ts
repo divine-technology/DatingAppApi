@@ -18,6 +18,7 @@ import { MessageService } from '../message/message.service';
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { MessageDto } from '../message/message.types';
 import { ContextService } from '../context/context.service';
+import { ImageService } from '../image/image.service';
 
 @Injectable()
 export class LikeService {
@@ -27,6 +28,8 @@ export class LikeService {
     private readonly userService: UsersService, //private readonly messageService: MessageService
     @Inject(forwardRef(() => MessageService))
     private readonly messageService: MessageService,
+    @Inject(forwardRef(() => MessageService))
+    private readonly imageService: ImageService,
     private readonly contextService: ContextService
   ) {}
 
@@ -255,20 +258,17 @@ export class LikeService {
       reactWithUserDto.likedPhotoUrl != null
     ) {
       const { likedUserId, likedPhotoUrl } = reactWithUserDto;
-      const messageDto: MessageDto = {
-        from: id,
-        message: likedPhotoUrl
-      };
-
-      if (likedPhotoUrl !== 'test url') {
-        throw new UnauthorizedException('Not a picture!');
-      }
 
       like = await this.like(id, likedUserId);
       if (like.hasErrors) {
         throw new UnauthorizedException('Error with liking');
       } else {
         try {
+          const messageDto: MessageDto = {
+            from: id,
+            message: null,
+            imageUrl: likedPhotoUrl
+          };
           message = await this.messageService.sendMessage(
             like._id.toString(),
             messageDto

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3 } from 'aws-sdk';
-import { ImageFileOptions } from './image.types';
+import { ImageFileOptions, ImageResponseDto } from './image.types';
 import { ImageDocument } from './image.schema';
 import { ImageRepository } from './image.repository';
 import mimeTypes from 'mime-types';
@@ -68,10 +68,57 @@ export class ImageService {
     });
   }
 
+  async uploadMessageImage(
+    image: Express.Multer.File,
+    options: ImageFileOptions = { path: '' },
+    likeId: string
+  ): Promise<ImageDocument> {
+    const uuid = uuidV4();
+    const extension = mimeTypes.extension(image.mimetype);
+    const awsKey = `${options.path}${uuid}.${extension}`;
+    const awsKey300 = `${options.path}${uuid}300x300.${extension}`;
+    const awsKey800 = `${options.path}${uuid}800x800.${extension}`;
+
+    const uploadResult = await this.s3
+      .upload({
+        Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
+        Body: image.buffer,
+        Key: `${likeId}/${awsKey}`
+      })
+      .promise();
+
+    this.s3
+      .upload({
+        Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
+        Body: await sharp(image.buffer)
+          .resize({ width: 300, height: 300 })
+          .toBuffer(),
+        Key: `${likeId}/${awsKey300}`
+      })
+      .promise();
+
+    this.s3
+      .upload({
+        Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
+        Body: await sharp(image.buffer)
+          .resize({ width: 800, height: 800 })
+          .toBuffer(),
+        Key: `${likeId}/${awsKey800}`
+      })
+      .promise();
+
+    return this.imageRepository.save({
+      awsKey: uploadResult.Key,
+      name: image.originalname,
+      extension: !!extension ? extension : null,
+      mimetype: image.mimetype
+    });
+  }
+
   async getSignedUrl(
     fileId: string,
     dimensions?: string
-  ): Promise<{ url: string }> {
+  ): Promise<ImageResponseDto> {
     const file = await this.imageRepository.getById(fileId);
     console.log({ file });
     const awsKey = `${file.awsKey.substring(0, file.awsKey.lastIndexOf('.'))}${
@@ -86,6 +133,9 @@ export class ImageService {
       Expires: 60
     });
 
-    return { url: signedUrl };
+    return {
+      url: signedUrl,
+      createdAt: (file as any).createdAt
+    };
   }
 }

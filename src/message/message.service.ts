@@ -22,6 +22,7 @@ import {
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { ContextService } from '../context/context.service';
 import mongoose from 'mongoose';
+import { ImageService } from '../image/image.service';
 
 @Injectable()
 export class MessageService {
@@ -29,6 +30,8 @@ export class MessageService {
     private readonly messageRepository: MessageRepository,
     @Inject(forwardRef(() => LikeService))
     private readonly likeService: LikeService,
+    @Inject(forwardRef(() => ImageService))
+    private readonly imageService: ImageService,
     private readonly contextService: ContextService
   ) {}
 
@@ -40,7 +43,7 @@ export class MessageService {
     likeId: string,
     messageDto: MessageBodyDto
   ): Promise<Message> {
-    const { message } = messageDto;
+    const { message, imageUrl } = messageDto;
     const doesConversationExist = await this.messageRepository.findMessage(
       likeId
     );
@@ -53,14 +56,12 @@ export class MessageService {
         findLike.status === MatchStatus.ONE_LIKED &&
         findLike.users[0]._id.toString() === from
       ) {
-        if (
-          message === 'test url' &&
-          from === findLike.users[0]._id.toString()
-        ) {
+        if (imageUrl !== null && from === findLike.users[0]._id.toString()) {
           const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            message
+            message,
+            image: imageUrl
           };
           const test = await this.messageRepository.createMessage(newMessage);
           return test;
@@ -77,7 +78,8 @@ export class MessageService {
           const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            message
+            message,
+            image: imageUrl
           };
           const test = await this.messageRepository.createMessage(newMessage);
           return test;
@@ -98,11 +100,12 @@ export class MessageService {
         });
 
         if (count <= 2 && doesMessageExist === false) {
-          if (message === 'test url') {
-            const newMessage = {
+          if (imageUrl !== null) {
+            const newMessage: Message = {
               likeId: new mongoose.Types.ObjectId(likeId),
               from: new mongoose.Types.ObjectId(from),
-              message
+              message,
+              image: imageUrl
             };
             const test = await this.messageRepository.createMessage(newMessage);
             console.log(test);
@@ -111,10 +114,11 @@ export class MessageService {
             throw new UnauthorizedException('Not a picture!');
           }
         } else {
-          const newMessage = {
+          const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
-            message
+            message,
+            image: imageUrl
           };
           const test = await this.messageRepository.createMessage(newMessage);
           console.log(test);
@@ -138,6 +142,18 @@ export class MessageService {
     );
     const messageData = data.data as unknown as MessageWithDate[];
 
+    await Promise.all(
+      messageData.map(async (message) => {
+        if (message.image !== null || message.image !== undefined) {
+          const imageUrl = await this.imageService.getSignedUrl(
+            message.image.toString(),
+            '300x300'
+          );
+          message.image = imageUrl.url;
+        }
+      })
+    );
+
     const dataToReturn: MultipleMessagesResponseDto[] = [];
 
     messageData.forEach((message) => {
@@ -153,7 +169,8 @@ export class MessageService {
             (message.from as unknown as UserWithId).lastName,
           avatar:
             'https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg'
-        }
+        },
+        image: message.image
       });
     });
 

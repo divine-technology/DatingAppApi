@@ -109,6 +109,15 @@ export class AuthUser {
 
   @ApiProperty({ required: false })
   lastPictureTaken: string;
+
+  @ApiProperty({ required: false })
+  prefferedAgeFrom: number;
+
+  @ApiProperty({ required: false })
+  prefferedAgeTo: number;
+
+  @ApiProperty({ required: false })
+  prefferedRadius: number;
 }
 
 export class AuthResponseDto {

@@ -9,16 +9,22 @@ export class MessageDto {
   from: string;
 
   @ApiProperty()
-  @IsNotEmpty()
   @IsString()
   message: string;
+
+  @ApiProperty()
+  @IsString()
+  imageUrl: string;
 }
 
 export class MessageBodyDto {
   @ApiProperty()
-  @IsNotEmpty()
   @IsString()
   message: string;
+
+  @ApiProperty()
+  @IsString()
+  imageUrl: string;
 }
 
 export class MessageResponseDto {
@@ -55,16 +61,17 @@ export class MultipleMessagesResponseDto {
   createdAt: Date;
   @ApiProperty()
   user: MessageUserResponse;
+  @ApiProperty()
+  image: string;
 }
 
-
-  // {
-  //   _id: 1,
-  //   text: 'Hello developer',
-  //   createdAt: new Date(),
-  //   user: {
-  //     _id: 2,
-  //     name: 'React Native',
-  //     avatar: 'https://placeimg.com/140/140/any',
-  //   },
-  // },
+// {
+//   _id: 1,
+//   text: 'Hello developer',
+//   createdAt: new Date(),
+//   user: {
+//     _id: 2,
+//     name: 'React Native',
+//     avatar: 'https://placeimg.com/140/140/any',
+//   },
+// },
