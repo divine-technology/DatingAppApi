@@ -300,8 +300,6 @@ export class LikeService {
     let likeWithErrorStatus = null;
 
     if (!doesMatchExist) {
-      console.log('MATCH DOESNT EXIST');
-
       like.users = [newId, newlikedUserId];
       like.status = MatchStatus.ONE_LIKED;
       likeWithErrorStatus = await this.likeRepository.reactWithUser(like);
@@ -311,19 +309,10 @@ export class LikeService {
       };
       //return 'Reaction saved';
     } else {
-      console.log('MATCH EXISTS');
-      console.log(
-        'IS IT TRUE OR FALSE: ',
-        doesMatchExist.users[1].toString(),
-        ' 2: ',
-        newId.toString()
-      );
       if (
         doesMatchExist.users[1].toString() === newId.toString() &&
         doesMatchExist.status === MatchStatus.ONE_LIKED
       ) {
-        console.log('LIKED BACK');
-
         like.status = MatchStatus.LIKED_BACK;
         likeWithErrorStatus = await this.likeRepository.updateReaction(
           doesMatchExist._id.toString(),
@@ -336,7 +325,6 @@ export class LikeService {
         };
         //return 'Reaction saved (LIKED BACK)';
       } else {
-        console.log('SHIT');
         return {
           hasErrors: true,
           _id: null
@@ -412,8 +400,6 @@ export class LikeService {
       new mongoose.Types.ObjectId(likeId)
     );
     const currentUser = this.contextService.userContext.user._id;
-    console.log('CURRENT USER: ', currentUser);
-    console.log('FETCHED LIKE: ', fetchedLike);
     const like = new Like();
 
     if (fetchedLike) {
@@ -452,21 +438,17 @@ export class LikeService {
     whereArray.push({ likeId: doesMatchExist._id.toString() });
 
     if (doesMatchExist) {
-      console.log(doesMatchExist);
-      console.log(doesMatchExist.users[0].toString() === newId.toString());
       if (
         doesMatchExist.status === MatchStatus.BLOCKED &&
         doesMatchExist.users[0].toString() === newId.toString()
       ) {
         const links = await this.messageService.getPhotoLinks(whereArray);
-        console.log('PHOTO URLS: ', links);
         await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else if (
         doesMatchExist.status === MatchStatus.BLOCKED_BACK &&
         doesMatchExist.users[1].toString() === newId.toString()
       ) {
         const links = await this.messageService.getPhotoLinks(whereArray);
-        console.log('PHOTO URLS: ', links);
         await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else {
         throw new UnauthorizedException();

@@ -254,7 +254,6 @@ export class UsersService {
     const imageId = (
       await this.imageService.uploadImage(image, { path: 'gallery/' })
     )._id;
-
     const userId = this.contextService.userContext.user._id;
 
     const testArr = [];
@@ -263,7 +262,7 @@ export class UsersService {
     testArr.push(imageId);
 
     return await this.userRepository.updateById(userId, {
-      gallery: userGallery
+      gallery: testArr?.map((id) => id.toString())
     });
   }
 
@@ -275,13 +274,22 @@ export class UsersService {
     likes.forEach((like) => likeIds.push(like._id));
 
     const deletedLikes = await this.likeService.deleteLikeByUserId(userId);
-    console.log('Likes have been deleted: ', deletedLikes);
 
     const deletedMessages = await this.messageService.deleteManyMessages(
       likeIds
     );
-    console.log('Messages have been deleted: ', deletedMessages);
 
     return await this.userRepository.deleteById(userId);
+  }
+
+  async getGallery() {
+    if (this.contextService.userContext.user.gallery) {
+      const res = await Promise.all(
+        this.contextService.userContext.user.gallery?.map((imageId) =>
+          this.imageService.getSignedUrl(imageId, '800x800')
+        )
+      );
+      return res;
+    }
   }
 }

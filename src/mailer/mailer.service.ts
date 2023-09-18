@@ -31,6 +31,5 @@ export class MailerService {
       subject: 'Hello ✔', // Subject line
       html: '<b>Hello world?</b>' // html body
     });
-    console.log('Message sent: %s', info);
   }
 }

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFile
+} from '@nestjs/common';
 import { MessageService } from './message.service';
 import {
   ApiBody,
@@ -11,7 +19,6 @@ import { Message } from '../users/user.schema';
 import { SEND_MESSAGE_EXAMPLE } from '../swagger/example';
 import {
   MessageBodyDto,
-  MessageDto,
   MessageResponseDto,
   MultipleMessagesResponseDto
 } from './message.types';
@@ -38,6 +45,14 @@ export class MessageController {
     @Body() messageDto: MessageBodyDto
   ): Promise<Message> {
     return await this.messageService.sendMessage(likeId, messageDto);
+  }
+
+  @Post('/upload-message-image/:likeId')
+  async uploadMessageImage(
+    @Param('likeId') likeId: string,
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<string> {
+    return await this.messageService.uploadMessageImage(image, likeId);
   }
 
   @ApiOperation({ summary: 'Get messages between users' })

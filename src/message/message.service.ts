@@ -39,6 +39,16 @@ export class MessageService {
     return this.messageRepository.test();
   }
 
+  async uploadMessageImage(image, conversationId): Promise<string> {
+    return (
+      await this.imageService.uploadImage(
+        image,
+        { path: 'messages/' },
+        conversationId
+      )
+    )._id.toString();
+  }
+
   async sendMessage(
     likeId: string,
     messageDto: MessageBodyDto
@@ -56,7 +66,7 @@ export class MessageService {
         findLike.status === MatchStatus.ONE_LIKED &&
         findLike.users[0]._id.toString() === from
       ) {
-        if (imageUrl !== null && from === findLike.users[0]._id.toString()) {
+        if (imageUrl && from === findLike.users[0]._id.toString()) {
           const newMessage: Message = {
             likeId: new mongoose.Types.ObjectId(likeId),
             from: new mongoose.Types.ObjectId(from),
@@ -100,7 +110,7 @@ export class MessageService {
         });
 
         if (count <= 2 && doesMessageExist === false) {
-          if (imageUrl !== null) {
+          if (imageUrl) {
             const newMessage: Message = {
               likeId: new mongoose.Types.ObjectId(likeId),
               from: new mongoose.Types.ObjectId(from),
@@ -108,7 +118,6 @@ export class MessageService {
               image: imageUrl
             };
             const test = await this.messageRepository.createMessage(newMessage);
-            console.log(test);
             return test;
           } else {
             throw new UnauthorizedException('Not a picture!');
@@ -121,7 +130,6 @@ export class MessageService {
             image: imageUrl
           };
           const test = await this.messageRepository.createMessage(newMessage);
-          console.log(test);
           return test;
         }
       } else {
@@ -144,7 +152,7 @@ export class MessageService {
 
     await Promise.all(
       messageData.map(async (message) => {
-        if (message.image !== null || message.image !== undefined) {
+        if (message.image) {
           const imageUrl = await this.imageService.getSignedUrl(
             message.image.toString(),
             '300x300'

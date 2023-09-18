@@ -37,7 +37,6 @@ export class SchedulerService {
       gallery: null,
       lastPictureTaken: null
     };
-    console.log('Scheduler radi');
     const users = await this.userService.getAllUsers(test);
     const promises = [];
     users.data.forEach((user) => {

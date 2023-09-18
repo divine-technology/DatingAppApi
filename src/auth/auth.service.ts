@@ -44,7 +44,6 @@ export class AuthService {
     const { email, password } = user;
     const conditionArray = [{ email }];
     const fetchedUser = await this.userService.findUserBy(conditionArray);
-    console.log(fetchedUser);
     if (!fetchedUser) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -91,7 +90,6 @@ export class AuthService {
 
   async createUser(user: CreateUserDto): Promise<AuthResponseDto> {
     const { email, password } = user;
-    console.log(`Email: ${email} password: ${password}`);
     const lowercaseEmail = email.toLowerCase();
     const conditionArray = [];
     conditionArray.push({ email });

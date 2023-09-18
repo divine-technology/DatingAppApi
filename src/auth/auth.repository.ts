@@ -34,12 +34,10 @@ export class AuthRepository {
       forgotPasswordToken: token,
       forgotPasswordTimestamp: timestamp
     };
-    console.log('ID: ', id);
     return await this.userRepository.updateById(id, updatedToken);
   }
 
   async createUser(user: User): Promise<UserWithId> {
-    console.log('DODJES LI OVDJE?');
     return await this.userRepository.createUser(user);
   }
 }

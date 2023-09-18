@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { UserResponse } from '../users/user.types';
 
 export class MessageDto {
@@ -12,9 +12,10 @@ export class MessageDto {
   @IsString()
   message: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 export class MessageBodyDto {
@@ -22,9 +23,10 @@ export class MessageBodyDto {
   @IsString()
   message: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 export class MessageResponseDto {

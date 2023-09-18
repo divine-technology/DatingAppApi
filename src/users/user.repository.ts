@@ -71,7 +71,6 @@ export class UserRepository {
   }
 
   async createUser(user: User): Promise<UserWithId> {
-    console.log('HALLOOOOOO');
     return await this.userModel.create(user);
   }
 

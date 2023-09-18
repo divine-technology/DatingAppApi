@@ -24,7 +24,8 @@ export class ImageService {
   }
   async uploadImage(
     image: Express.Multer.File,
-    options: ImageFileOptions = { path: '' }
+    options: ImageFileOptions = { path: '' },
+    prefix?: string
   ): Promise<ImageDocument> {
     const uuid = uuidV4();
     const extension = mimeTypes.extension(image.mimetype);
@@ -36,7 +37,7 @@ export class ImageService {
       .upload({
         Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
         Body: image.buffer,
-        Key: `${this.contextService.userContext.user._id}/${awsKey}`
+        Key: `${prefix ?? this.contextService.userContext.user._id}/${awsKey}`
       })
       .promise();
 
@@ -46,7 +47,9 @@ export class ImageService {
         Body: await sharp(image.buffer)
           .resize({ width: 300, height: 300 })
           .toBuffer(),
-        Key: `${this.contextService.userContext.user._id}/${awsKey300}`
+        Key: `${
+          prefix ?? this.contextService.userContext.user._id
+        }/${awsKey300}`
       })
       .promise();
 
@@ -56,7 +59,9 @@ export class ImageService {
         Body: await sharp(image.buffer)
           .resize({ width: 800, height: 800 })
           .toBuffer(),
-        Key: `${this.contextService.userContext.user._id}/${awsKey800}`
+        Key: `${
+          prefix ?? this.contextService.userContext.user._id
+        }/${awsKey800}`
       })
       .promise();
 
@@ -86,7 +91,6 @@ export class ImageService {
         Key: `${likeId}/${awsKey}`
       })
       .promise();
-
     this.s3
       .upload({
         Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
@@ -120,13 +124,9 @@ export class ImageService {
     dimensions?: string
   ): Promise<ImageResponseDto> {
     const file = await this.imageRepository.getById(fileId);
-    console.log({ file });
     const awsKey = `${file.awsKey.substring(0, file.awsKey.lastIndexOf('.'))}${
       dimensions ?? ''
     }${file.awsKey.substring(file.awsKey.lastIndexOf('.'))}`;
-    console.log({
-      awsKey
-    });
     const signedUrl = await this.s3.getSignedUrl('getObject', {
       Bucket: this.configService.get('AWS_S3_BUCKET_NAME'),
       Key: awsKey,

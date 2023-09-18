@@ -142,4 +142,10 @@ export class UsersController {
   ): Promise<User> {
     return await this.usersService.uploadGalleryImage(image);
   }
+
+  @Auth(Roles.ADMIN)
+  @Get('/gallery')
+  async getUserGallery() {
+    return await this.usersService.getGallery();
+  }
 }

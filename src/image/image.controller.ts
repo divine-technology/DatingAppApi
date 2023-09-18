@@ -51,7 +51,6 @@ export class ImageController {
     @Param('imageId') imageId: string,
     @Query('dimensions') dimensions: string
   ) {
-    console.log('IMAGE ID: ', imageId);
     return this.imageService.getSignedUrl(imageId, dimensions);
   }
 }
