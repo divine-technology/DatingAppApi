@@ -200,9 +200,9 @@ export class UsersService {
       arrayOfIds.push(blockBack.user._id)
     );
     myBlocks.data.forEach((myBlock) => arrayOfIds.push(myBlock.user._id));
-    myBothLikes.data.forEach((myBothLike) =>
-      arrayOfIds.push(myBothLike.user._id)
-    );
+    myBothLikes.data.forEach((myBothLike) => {
+      arrayOfIds.push(myBothLike.user._id);
+    });
     myDislikes.data.forEach((myDislike) => arrayOfIds.push(myDislike.user._id));
     myLikes.data.forEach((myLike) => arrayOfIds.push(myLike.user._id));
 

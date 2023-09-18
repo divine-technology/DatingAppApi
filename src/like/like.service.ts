@@ -50,7 +50,8 @@ export class LikeService {
     likes.data.forEach((item) => {
       newTestArray.push({
         _id: item._id,
-        user: item.users[1],
+        user:
+          item.users[1]._id.toString() === id ? item.users[0] : item.users[1],
         status: item.status
       });
     });
