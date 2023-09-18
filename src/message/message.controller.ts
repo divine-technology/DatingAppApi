@@ -56,7 +56,6 @@ export class MessageController {
     @Param('likeId') likeId: string,
     @UploadedFile() image: Express.Multer.File
   ): Promise<string> {
-    console.log('HALOOOO');
     return await this.messageService.uploadMessageImage(image, likeId);
   }
 

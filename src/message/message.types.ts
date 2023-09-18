@@ -19,9 +19,10 @@ export class MessageDto {
 }
 
 export class MessageBodyDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  message: string;
+  message?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
