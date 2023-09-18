@@ -5,7 +5,8 @@ import {
   Param,
   Post,
   Query,
-  UploadedFile
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import { MessageService } from './message.service';
 import {
@@ -25,6 +26,7 @@ import {
 import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 import { Roles } from '../users/user.enum';
 import { Auth } from '../middleware/auth.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Message')
 @Controller('message')
@@ -47,12 +49,26 @@ export class MessageController {
     return await this.messageService.sendMessage(likeId, messageDto);
   }
 
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
   @Post('/upload-message-image/:likeId')
   async uploadMessageImage(
     @Param('likeId') likeId: string,
     @UploadedFile() image: Express.Multer.File
   ): Promise<string> {
+    console.log('HALOOOO');
     return await this.messageService.uploadMessageImage(image, likeId);
+  }
+
+  @Auth(Roles.ADMIN)
+  @ApiOperation({ summary: 'Send image message' })
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/send-image-message/:likeId')
+  async sendImageMessage(
+    @Param('likeId') likeId: string,
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<Message> {
+    return await this.messageService.sendImageMessage(likeId, image);
   }
 
   @ApiOperation({ summary: 'Get messages between users' })

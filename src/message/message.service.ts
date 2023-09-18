@@ -140,6 +140,119 @@ export class MessageService {
     }
   }
 
+  async sendImageMessage(
+    likeId: string,
+    image: Express.Multer.File
+  ): Promise<Message> {
+    const doesConversationExist = await this.messageRepository.findMessage(
+      likeId
+    );
+    const findLike = await this.likeService.findLikeById(likeId);
+
+    const from = this.contextService.userContext.user._id;
+
+    if (!doesConversationExist) {
+      if (
+        findLike.status === MatchStatus.ONE_LIKED &&
+        findLike.users[0]._id.toString() === from
+      ) {
+        if (image !== null && from === findLike.users[0]._id.toString()) {
+          const imageUrl = (
+            await this.imageService.uploadMessageImage(
+              image,
+              { path: 'conversation/' },
+              likeId
+            )
+          )._id;
+          const newMessage: Message = {
+            likeId: new mongoose.Types.ObjectId(likeId),
+            from: new mongoose.Types.ObjectId(from),
+            message: null,
+            image: imageUrl
+          };
+        } else {
+          throw new UnauthorizedException('Not a picture! / Cannot do that!');
+        }
+      } else {
+        throw new UnauthorizedException('1');
+      }
+    } else if (doesConversationExist) {
+      if (findLike.status === MatchStatus.ONE_LIKED) {
+        const count = await this.messageRepository.countMessages(likeId);
+        if (count < 2 && doesConversationExist.from.toString() === from) {
+          const imageUrl = (
+            await this.imageService.uploadMessageImage(
+              image,
+              { path: 'conversation/' },
+              likeId
+            )
+          )._id;
+          const newMessage: Message = {
+            likeId: new mongoose.Types.ObjectId(likeId),
+            from: new mongoose.Types.ObjectId(from),
+            message: null,
+            image: imageUrl
+          };
+          return await this.messageRepository.createMessage(newMessage);
+        } else {
+          throw new UnauthorizedException('Cannot send more than 2 messages!');
+        }
+      } else if (findLike.status === MatchStatus.LIKED_BACK) {
+        const messages = await this.messageRepository.getFirstFiveMessages(
+          likeId
+        );
+        const count = await this.messageRepository.countMessages(likeId);
+        let doesMessageExist = false;
+        messages.forEach((message) => {
+          if (message.from.toString() === from) {
+            doesMessageExist = true;
+            return;
+          }
+        });
+
+        if (count <= 2 && doesMessageExist === false) {
+          if (image !== null) {
+            const imageUrl = (
+              await this.imageService.uploadMessageImage(
+                image,
+                { path: 'conversation/' },
+                likeId
+              )
+            )._id;
+            const newMessage: Message = {
+              likeId: new mongoose.Types.ObjectId(likeId),
+              from: new mongoose.Types.ObjectId(from),
+              message: null,
+              image: imageUrl
+            };
+            return await this.messageRepository.createMessage(newMessage);
+          } else {
+            throw new UnauthorizedException('Not a picture!');
+          }
+        } else {
+          const imageUrl = (
+            await this.imageService.uploadMessageImage(
+              image,
+              { path: 'conversation/' },
+              likeId
+            )
+          )._id;
+          const newMessage: Message = {
+            likeId: new mongoose.Types.ObjectId(likeId),
+            from: new mongoose.Types.ObjectId(from),
+            message: null,
+            image: imageUrl
+          };
+          return await this.messageRepository.createMessage(newMessage);
+        }
+      } else {
+        throw new UnauthorizedException('3');
+      }
+    } else {
+      throw new UnauthorizedException('4');
+    }
+  }
+
   async getConversation(
     likeId: string,
     paginateDto: PaginateDto
