@@ -1,28 +1,20 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
-  NotFoundException,
-  UnauthorizedException
+  NotFoundException
 } from '@nestjs/common';
-import { Like, LikeWithId, Message, User, UserWithId } from './user.schema';
+import { User, UserWithId } from './user.schema';
 import mongoose, { isValidObjectId } from 'mongoose';
 import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { CreateUserDto } from './dto/create.user.dto';
-import { Roles } from './user.enum';
 import { MailerService } from '../mailer/mailer.service';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UpdateUserDto } from './dto/update.user.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
-import { MatchStatus } from '../like/like.types';
-import { MessageDto } from './dto/message.dto';
+import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { ContextService } from '../context/context.service';
+import { LikeService } from '../like/like.service';
+import { AuthUser } from '../auth/auth.types';
+import { MessageService } from '../message/message.service';
+import { ImageService } from '../image/image.service';
 
 export const numberOfSalts = 10;
 
@@ -30,28 +22,40 @@ export const numberOfSalts = 10;
 export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly contextService: ContextService,
+    private readonly likeService: LikeService,
+    private readonly messageService: MessageService,
+    private readonly imageService: ImageService,
     private jwtService: JwtService,
     private mailerService: MailerService
   ) {}
 
   async getAllUsers(
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     //this.mailerService.sendMail();
     const {
-      name,
+      firstName,
+      lastName,
       email,
       role,
       forgotPasswordToken,
       forgotPasswordTimestamp,
-      createdAccountTimestamp
+      createdAccountTimestamp,
+      gender,
+      preference,
+      age,
+      hobbies
     } = paginateDto;
     const whereArray = [];
     if (email) {
       whereArray.push({ email: { $regex: '.*' + email + '.*' } });
     }
-    if (name) {
-      whereArray.push({ name: { $regex: '.*' + name + '.*' } });
+    if (firstName) {
+      whereArray.push({ firstName: { $regex: '.*' + firstName + '.*' } });
+    }
+    if (lastName) {
+      whereArray.push({ lastName: { $regex: '.*' + lastName + '.*' } });
     }
     if (role) {
       whereArray.push({ role: role });
@@ -71,229 +75,31 @@ export class UsersService {
         createdAccountTimestamp: createdAccountTimestamp
       });
     }
+    if (gender) {
+      whereArray.push({
+        gender: gender
+      });
+    }
+    if (preference) {
+      whereArray.push({
+        preference: preference
+      });
+    }
+    if (age) {
+      whereArray.push({
+        age: age
+      });
+    }
+    if (hobbies) {
+      whereArray.push({
+        createdAccountTimestamp: createdAccountTimestamp
+      });
+    }
 
     return await this.userRepository.getAllUsers(paginateDto, whereArray);
   }
 
-  /* async getAllForLikes(id: string): Promise<User[]> {
-    const likes = await this.userRepository.getLikesByUserId(id);
-    const excludedUserIds = likes.map((like) => like.users).flat();
-
-    return this.userRepository.getAllForLikes(excludedUserIds, id);
-  } */
-
-  /*   async reactWithUser(
-    id: string,
-    reactWithUserDto: ReactWithUserDto
-  ): Promise<string> {
-    const { likedUserId, status } = reactWithUserDto;
-    const matchArray = [id, likedUserId];
-    const doesMatchExist = await this.userRepository.findLike(matchArray);
-    if (!doesMatchExist) {
-      const newLike = new Like();
-
-      if (status === MatchStatus.LIKED) {
-        newLike.users = [id, likedUserId];
-        newLike.status = 'one_liked';
-      } else if (status === MatchStatus.DISLIKED) {
-        newLike.users = [id, likedUserId];
-        newLike.status = 'disliked';
-      } else {
-        return 'Impossible scenario';
-      }
-
-      await this.userRepository.reactWithUser(newLike);
-      return 'Reaction saved.';
-    } else {
-      //CHECK IF STATUS IS DISLIKED AND FORBID ANYTHING IF IT IS
-      if (
-        doesMatchExist.status === MatchStatus.DISLIKED ||
-        (doesMatchExist.status === 'one_liked' &&
-          doesMatchExist.users[0] === id &&
-          status !== MatchStatus.BLOCKED) ||
-        (doesMatchExist.status === 'liked_back' &&
-          doesMatchExist.users[0] === id &&
-          status !== MatchStatus.BLOCKED) ||
-        (doesMatchExist.users[1] === id && status !== MatchStatus.BLOCKED) ||
-        (doesMatchExist.users[1] === id &&
-          status !== MatchStatus.UNBLOCKED &&
-          doesMatchExist.status !== MatchStatus.BLOCKED_BACK)
-      ) {
-        return 'Forbidden action!';
-      }
-      //CHECK IF USER WHO BLOCKED TRIES TO DO ANYTHING OTHER THAN UNBLOCK
-      if (
-        (doesMatchExist.status === MatchStatus.BLOCKED_BACK &&
-          doesMatchExist.users[1] === id &&
-          status !== MatchStatus.UNBLOCKED) ||
-        (doesMatchExist.status === MatchStatus.BLOCKED &&
-          doesMatchExist.users[0] === id &&
-          status !== MatchStatus.UNBLOCKED)
-      ) {
-        return 'Cannot do anything. You need to unblock the user first!';
-      }
-      //BLOCK CHECK
-      if (
-        (doesMatchExist.status === MatchStatus.BLOCKED_BACK &&
-          doesMatchExist.users[0] === id) ||
-        (doesMatchExist.status === MatchStatus.BLOCKED &&
-          doesMatchExist.users[1] === id)
-      ) {
-        return 'Cannot do anything. You are blocked!';
-      }
-      //UNBLOCK USER
-      if (
-        (doesMatchExist.users[0] === id && status === MatchStatus.UNBLOCKED) ||
-        (doesMatchExist.users[1] === id &&
-          status === MatchStatus.UNBLOCKED &&
-          doesMatchExist.status === MatchStatus.BLOCKED_BACK)
-      ) {
-        const like = new Like();
-        like.users = [id, likedUserId];
-        like.status = 'liked';
-        await this.userRepository.updateReaction(
-          doesMatchExist._id.toString(),
-          like
-        );
-        return 'User unblocked.';
-      }
-      //LIKE/DISLIKE TWICE CHECK
-      if (doesMatchExist.users[0] === id && status === MatchStatus.LIKED) {
-        return 'Cannot like/dislike the same user twice.';
-      } else {
-        const like = new Like();
-        if (status === MatchStatus.DISLIKED) {
-          like.users = [id, likedUserId];
-          like.status = 'disliked';
-        } else if (status === MatchStatus.BLOCKED) {
-          if (doesMatchExist.users[0] == id) {
-            like.users = [id, likedUserId];
-            like.status = 'blocked';
-          } else {
-            like.users = [id, likedUserId];
-            like.status = 'blocked_back';
-          }
-        } else if (status === MatchStatus.LIKED) {
-          like.users = [id, likedUserId];
-          like.status = 'liked_back';
-        } else {
-          return 'Impossible scenario';
-        }
-
-        await this.userRepository.updateReaction(
-          doesMatchExist._id.toString(),
-          like
-        );
-        return 'User saved (Updated).';
-      }
-    }
-  } */
-
-  async sendMessage(likeId: string, messageDto: MessageDto): Promise<boolean> {
-    const { from, to, message } = messageDto;
-    const doesConversationExist = await this.userRepository.findMessage(likeId);
-    const findLike = await this.userRepository.findLikeById(likeId);
-
-    const arr = [from, to];
-
-    if (!doesConversationExist) {
-      if (
-        findLike.status === MatchStatus.ONE_LIKED &&
-        arr.includes(findLike.users[0].toString()) &&
-        arr.includes(findLike.users[1].toString())
-      ) {
-        if (message === 'test url' && arr[0] === findLike.users[0].toString()) {
-          const newMessage = {
-            likeId: Object(likeId),
-            from,
-            to,
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else if (doesConversationExist) {
-      if (findLike.status === MatchStatus.ONE_LIKED) {
-        const count = await this.userRepository.countMessages(likeId);
-        if (count < 2 && doesConversationExist.from === from) {
-          const newMessage = {
-            likeId: Object(likeId),
-            from,
-            to,
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        } else {
-          return false;
-        }
-      } else if (findLike.status === MatchStatus.LIKED_BACK) {
-        const messages = await this.userRepository.getFirstFiveMessages(likeId);
-        const count = await this.userRepository.countMessages(likeId);
-        let doesMessageExist = false;
-        messages.forEach((message) => {
-          if (message.from === from) {
-            doesMessageExist = true;
-            return;
-          }
-        });
-
-        if (count <= 2 && doesMessageExist === false) {
-          if (message === 'test url') {
-            const newMessage = {
-              likeId: Object(likeId),
-              from,
-              to,
-              message
-            };
-            const test = await this.userRepository.createMessage(newMessage);
-            console.log(test);
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          const newMessage = {
-            likeId: Object(likeId),
-            from,
-            to,
-            message
-          };
-          const test = await this.userRepository.createMessage(newMessage);
-          console.log(test);
-          return true;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  async getConversation(
-    likeId: string,
-    paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
-    return await this.userRepository.getConversation(likeId, paginateDto);
-  }
-
-  async deleteMessages(likeId: string): Promise<string> {
-    return await this.userRepository.deleteMessages(likeId);
-  }
-
-  async getPhotoLinks(whereArray: any[]): Promise<Message[]> {
-    return await this.userRepository.getPhotoLinks(whereArray);
-  }
-
-  async getOneUser(id: string): Promise<User> {
+  async getOneUser(id: string): Promise<AuthUser> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid id parameter');
     }
@@ -301,40 +107,111 @@ export class UsersService {
     if (!res) {
       throw new NotFoundException('User not found');
     }
-    return res;
+    const dataToReturn: AuthUser = {
+      _id: res._id,
+      firstName: res.firstName,
+      lastName: res.lastName,
+      email: res.email,
+      gender: res.gender,
+      age: res.age,
+      bio: res.bio,
+      role: res.role,
+      location: res.location,
+      preference: res.preference,
+      createdAccountTimeStamp: res.createdAccountTimeStamp,
+      hobbies: res.hobbies,
+      profilePicture: res.profilePicture,
+      gallery: res.gallery,
+      lastPictureTaken: res.lastPictureTaken,
+      prefferedAgeFrom: res.prefferedAgeFrom,
+      prefferedAgeTo: res.prefferedAgeTo,
+      prefferedRadius: res.prefferedRadius
+    };
+    return dataToReturn;
   }
 
-  async createUser(user: CreateUserDto): Promise<{ token: string }> {
-    const { email, password } = user;
-    const lowercaseEmail = email.toLowerCase();
-    const conditionArray = [];
-    conditionArray.push({ email });
-    const existingUser = await this.userRepository.findBy(conditionArray);
-    if (existingUser != null) {
-      throw new ConflictException('Email already exists!');
-    } else {
-      const hashedPassword = await bcrypt.hash(password, numberOfSalts);
-      const newUser = {
-        ...user,
-        email: lowercaseEmail,
-        password: hashedPassword,
-        role: Roles.ADMIN,
-        forgotPasswordToken: null,
-        forgotPasswordTimestamp: null,
-        createdAccountTimestamp: new Date().toISOString(),
-        location: {
-          type: 'Point',
-          coordinates: [43.85643, 18.413029]
-        }
-      };
-      const finalUser = await this.userRepository.createUser(newUser);
-      const token = this.jwtService.sign({ id: finalUser._id });
-      return { token };
-    }
-  }
+  async getRadius(
+    userRadiusDto: UserRadiusDto,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<UserResponse>> {
+    const myUser = this.contextService.userContext.user;
+    const myLikes = await this.likeService.getLikes(myUser._id.toString(), {
+      page: 0,
+      limit: 0,
+      sort: 1,
+      sortBy: '_id'
+    });
+    const myDislikes = await this.likeService.getDislikes(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBothLikes = await this.likeService.getBothLikes(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBlocks = await this.likeService.getBlocked(myUser._id.toString(), {
+      page: 0,
+      limit: 0,
+      sort: 1,
+      sortBy: '_id'
+    });
+    const myBlocksBack = await this.likeService.getBlockedBack(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myBlocksBy = await this.likeService.getBlockedBy(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
+    const myDislikedBy = await this.likeService.getDislikedBy(
+      myUser._id.toString(),
+      {
+        page: 0,
+        limit: 0,
+        sort: 1,
+        sortBy: '_id'
+      }
+    );
 
-  async getRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
-    return await this.userRepository.getUsersWithinRadius(userRadiusDto);
+    const arrayOfIds: mongoose.Types.ObjectId[] = [];
+    myBlocksBy.data.forEach((block) => arrayOfIds.push(block.user._id));
+    myDislikedBy.data.forEach((dislike) => arrayOfIds.push(dislike.user._id));
+    myBlocksBack.data.forEach((blockBack) =>
+      arrayOfIds.push(blockBack.user._id)
+    );
+    myBlocks.data.forEach((myBlock) => arrayOfIds.push(myBlock.user._id));
+    myBothLikes.data.forEach((myBothLike) => {
+      arrayOfIds.push(myBothLike.user._id);
+    });
+    myDislikes.data.forEach((myDislike) => arrayOfIds.push(myDislike.user._id));
+    myLikes.data.forEach((myLike) => arrayOfIds.push(myLike.user._id));
+
+    return await this.userRepository.getUsersWithinRadius(
+      userRadiusDto,
+      myUser,
+      paginateDto,
+      arrayOfIds
+    );
   }
 
   async findUserBy(conditionArray: any[]): Promise<UserWithId> {
@@ -345,7 +222,74 @@ export class UsersService {
     return await this.userRepository.updateById(id, user);
   }
 
-  async deleteById(id: string): Promise<User> {
-    return await this.userRepository.deleteById(id);
+  async createUser(user: User): Promise<UserWithId> {
+    return await this.userRepository.createUser(user);
+  }
+
+  async uploadProfileImage(image): Promise<UserWithId> {
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'profile/' })
+    )._id;
+
+    const userId = this.contextService.userContext.user._id;
+
+    return await this.userRepository.updateById(userId, {
+      profilePicture: imageId.toString()
+    });
+  }
+
+  async uploadSelfieImage(image): Promise<UserWithId> {
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'selfie/' })
+    )._id;
+
+    const userId = this.contextService.userContext.user._id;
+
+    return await this.userRepository.updateById(userId, {
+      lastPictureTaken: imageId.toString()
+    });
+  }
+
+  async uploadGalleryImage(image): Promise<UserWithId> {
+    const imageId = (
+      await this.imageService.uploadImage(image, { path: 'gallery/' })
+    )._id;
+    const userId = this.contextService.userContext.user._id;
+
+    const testArr = [];
+    const userGallery = this.contextService.userContext.user.gallery;
+    userGallery?.forEach((image) => testArr.push(image));
+    testArr.push(imageId);
+
+    return await this.userRepository.updateById(userId, {
+      gallery: testArr?.map((id) => id.toString())
+    });
+  }
+
+  async deleteById(): Promise<User> {
+    const userId = this.contextService.userContext.user._id;
+    const likes = await this.likeService.getAllLikes(userId);
+
+    const likeIds: mongoose.Types.ObjectId[] = [];
+    likes.forEach((like) => likeIds.push(like._id));
+
+    const deletedLikes = await this.likeService.deleteLikeByUserId(userId);
+
+    const deletedMessages = await this.messageService.deleteManyMessages(
+      likeIds
+    );
+
+    return await this.userRepository.deleteById(userId);
+  }
+
+  async getGallery() {
+    if (this.contextService.userContext.user.gallery) {
+      const res = await Promise.all(
+        this.contextService.userContext.user.gallery?.map((imageId) =>
+          this.imageService.getSignedUrl(imageId, '800x800')
+        )
+      );
+      return res;
+    }
   }
 }

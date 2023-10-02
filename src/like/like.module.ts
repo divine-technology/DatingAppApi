@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   Like,
@@ -19,36 +19,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerService } from '../mailer/mailer.service';
 import { MessageService } from '../message/message.service';
 import { MessageRepository } from '../message/message.repository';
+import { ContextService } from '../context/context.service';
+import { CoreModule } from '../core.module';
+import { MessageModule } from '../message/message.module';
+import { UsersModule } from '../users/user.module';
 
+@Global()
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: config.get<string | number>('JWT_EXPIRE')
-        }
-      })
-    }),
-    MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
-      { name: Like.name, schema: LikeSchema },
-      { name: Message.name, schema: MessageSchema }
-    ])
+    MongooseModule.forFeature([{ name: Like.name, schema: LikeSchema }]),
+    CoreModule,
+    forwardRef(() => MessageModule),
+    forwardRef(() => UsersModule)
   ],
   controllers: [LikeController],
-  providers: [
-    LikeRepository,
-    LikeService,
-    UsersService,
-    UserRepository,
-    MailerService,
-    MessageRepository,
-    MessageService
-  ],
-  exports: [LikeRepository]
+  providers: [LikeRepository, LikeService],
+  exports: [LikeService]
 })
 export class LikeModule {}

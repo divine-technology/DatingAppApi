@@ -1,6 +1,12 @@
-import { Body, Controller, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginUserDto } from './auth.types';
+import {
+  AuthResponseDto,
+  AuthUser,
+  ForgotPasswordResponseDto,
+  LoginResponseDto,
+  LoginUserDto
+} from './auth.types';
 import { ForgotPasswordDto } from './auth.types';
 import { ChangeForgotPasswordDto } from './auth.types';
 import { ChangePasswordDto } from './auth.types';
@@ -16,8 +22,13 @@ import { User } from '../users/user.schema';
 import {
   CHANGE_FORGOT_PASSWORD_EXAMPLE,
   CHANGE_PASSWORD_EXAMPLE,
+  CREATE_USER_EXAMPLE,
+  FORGOT_PASSWORD_EXAMPLE,
   LOGIN_USER_EXAMPLE
 } from '../swagger/example';
+import { CreateUserDto } from '../users/user.types';
+import { Auth } from '../middleware/auth.decorator';
+import { Roles } from '../users/user.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -25,35 +36,70 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Login user' })
-  @ApiBody({ schema: { example: LOGIN_USER_EXAMPLE } })
+  @ApiBody({ examples: LOGIN_USER_EXAMPLE, type: LoginUserDto })
   @ApiResponse({
     status: 200,
-    type: String
+    type: AuthResponseDto
   })
   @Post('/login')
   async loginUser(
     @Body()
     loginUserDto: LoginUserDto
-  ): Promise<{ token: string }> {
+  ): Promise<AuthResponseDto> {
     return await this.authService.loginUser(loginUserDto);
   }
 
-  @ApiOperation({ summary: 'Forgot password' })
-  @ApiBody({ schema: { example: 'test@mail.com' } })
+  @Auth(Roles.ADMIN)
   @ApiResponse({
     status: 200,
-    type: String
+    type: AuthUser
+  })
+  @ApiOperation({ summary: 'Get me' })
+  @Get('/get-me')
+  async getMe(): Promise<AuthUser> {
+    return await this.authService.getMe();
+  }
+
+  @ApiOperation({ summary: 'Create user' })
+  @ApiBody({
+    examples: CREATE_USER_EXAMPLE,
+    type: CreateUserDto
+  })
+  @ApiExtraModels(User)
+  @ApiResponse({
+    status: 200,
+    type: AuthResponseDto
+  })
+  @Post('/')
+  async createUser(
+    @Body()
+    createUserDto: CreateUserDto
+  ): Promise<AuthResponseDto> {
+    return await this.authService.createUser(createUserDto);
+  }
+
+  @ApiOperation({ summary: 'Forgot password' })
+  @ApiBody({
+    examples: FORGOT_PASSWORD_EXAMPLE,
+    type: ForgotPasswordDto
+  })
+  @ApiResponse({
+    status: 200,
+    type: ForgotPasswordResponseDto
   })
   @Post('/forgot-password')
   async forgotPassword(
     @Body()
     forgotPasswordDto: ForgotPasswordDto
-  ): Promise<string> {
+  ): Promise<ForgotPasswordResponseDto> {
     return await this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @ApiOperation({ summary: 'Change forgot password' })
-  @ApiBody({ schema: { example: CHANGE_FORGOT_PASSWORD_EXAMPLE } })
+  @ApiBody({
+    examples: CHANGE_FORGOT_PASSWORD_EXAMPLE,
+    type: ChangeForgotPasswordDto
+  })
   @ApiResponse({
     status: 200,
     type: String
@@ -67,7 +113,10 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Change password' })
-  @ApiBody({ schema: { example: CHANGE_PASSWORD_EXAMPLE } })
+  @ApiBody({
+    examples: CHANGE_PASSWORD_EXAMPLE,
+    type: ChangePasswordDto
+  })
   @ApiResponse({
     status: 200,
     type: String

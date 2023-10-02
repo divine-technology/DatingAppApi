@@ -1,32 +1,17 @@
 import { InjectModel } from '@nestjs/mongoose';
-import {
-  FADILMRZITYPESCRIPT,
-  Like,
-  LikeWithId,
-  Message,
-  User,
-  UserWithId
-} from './user.schema';
+import { User, UserWithId } from './user.schema';
 import mongoose, { Model } from 'mongoose';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
+import { UserPaginateDto, UserRadiusDto, UserResponse } from './user.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { AuthUser } from '../auth/auth.types';
 
 export class UserRepository {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Like.name) private likeModel: Model<Like>,
-    @InjectModel(Message.name) private messageModel: Model<Message>
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async getAllUsers(
     paginateDto: UserPaginateDto,
     whereArray: any[]
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     const { limit, page, sort, sortBy } = paginateDto;
     const whereCondition =
       whereArray.length > 0
@@ -35,13 +20,6 @@ export class UserRepository {
           }
         : {};
     const count = await this.userModel.find(whereCondition).count();
-    let numberOfPages: number;
-
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.userModel
       .find(whereCondition)
@@ -49,14 +27,10 @@ export class UserRepository {
       .limit(limit)
       .skip((page - 1) * limit);
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
-  }
-
-  async findLikeById(id: string): Promise<Like> {
-    return await this.likeModel.findById(id);
   }
 
   /* async getAllForLike(id: string): Promise<User[]> {
@@ -88,71 +62,7 @@ export class UserRepository {
     return 'User disliked!';
   } */
 
-  async createMessage(message: Message): Promise<Message> {
-    return await this.messageModel.create(message);
-  }
-
-  async findMessage(likeId: string): Promise<FADILMRZITYPESCRIPT> {
-    return await this.messageModel
-      .findOne({ likeId: likeId })
-      .populate('likeId', 'status');
-  }
-
-  async countMessages(likeId: string): Promise<number> {
-    return await this.messageModel.find({ likeId: likeId }).count();
-  }
-
-  async getFirstFiveMessages(likeId: string): Promise<Message[]> {
-    return await this.messageModel.find({ likeId: likeId }).limit(5);
-  }
-
-  async getConversation(
-    likeId: string,
-    paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoMessages> {
-    const { page, limit } = paginateDto;
-
-    const count = await this.countMessages(likeId);
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
-
-    const data = await this.messageModel
-      .find({
-        likeId: likeId
-      })
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
-
-    return {
-      pages: numberOfPages,
-      page: limit < 1 ? 1 : page,
-      data
-    };
-  }
-
-  async getPhotoLinks(whereArray: any[]): Promise<Message[]> {
-    return await this.messageModel
-      .find({
-        $and: [...whereArray]
-      })
-      .select('message');
-  }
-
-  async deleteMessages(likeId: string): Promise<string> {
-    try {
-      await this.messageModel.deleteMany({ likeId: likeId });
-      return 'Messages deleted';
-    } catch {
-      throw new Error('Unable to delete messages!');
-    }
-  }
-
-  async getOneUser(id: string): Promise<User> {
+  async getOneUser(id: string): Promise<AuthUser> {
     return await this.userModel.findById(id);
   }
 
@@ -164,7 +74,7 @@ export class UserRepository {
     return await this.userModel.create(user);
   }
 
-  async updateById(id: string, user: Omit<User, '_id'>): Promise<User> {
+  async updateById(id: string, user: Partial<User>): Promise<UserWithId> {
     return await this.userModel.findByIdAndUpdate(id, user, {
       new: true,
       runValidators: true
@@ -175,10 +85,16 @@ export class UserRepository {
     return await this.userModel.findByIdAndDelete(id);
   }
 
-  async getUsersWithinRadius(userRadiusDto: UserRadiusDto): Promise<User[]> {
+  async getUsersWithinRadius(
+    userRadiusDto: UserRadiusDto,
+    myUser: AuthUser,
+    paginateDto: PaginateDto,
+    arrayOfIds: mongoose.Types.ObjectId[]
+  ): Promise<ResponsePaginateDto<UserResponse>> {
     const { location, radius } = userRadiusDto;
+    const { page = 1, limit = 100, sort = 1, sortBy = '_id' } = paginateDto;
 
-    const users = await this.userModel.aggregate([
+    const aggregationPipeline: any[] = [
       {
         $geoNear: {
           near: { type: 'Point', coordinates: location.coordinates },
@@ -186,9 +102,65 @@ export class UserRepository {
           maxDistance: radius,
           spherical: true
         }
+      },
+      {
+        $match: {
+          _id: {
+            $nin: [...arrayOfIds, myUser._id]
+          },
+          $and: [
+            { preference: myUser.gender },
+            { gender: myUser.preference },
+            {
+              age: {
+                $gte: myUser.prefferedAgeFrom,
+                $lte: myUser.prefferedAgeTo
+              }
+            }
+          ]
+        }
+      },
+      {
+        $sort: { [`${sortBy}`]: Number(sort) === 1 ? 1 : -1 }
+      },
+      {
+        $facet: {
+          paginatedUsers: [
+            { $skip: (Number(page) - 1) * Number(limit) },
+            { $limit: Number(limit) }
+          ],
+          totalCount: [{ $count: 'count' }]
+        }
       }
-    ]);
+    ];
 
-    return users;
+    const result = await this.userModel.aggregate(aggregationPipeline);
+
+    const paginatedUsers: UserResponse[] =
+      result[0]?.paginatedUsers.map((user: UserWithId) => {
+        const userResponse: UserResponse = {
+          _id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          gender: user.gender,
+          preference: user.preference,
+          bio: user.bio,
+          age: user.age,
+          hobbies: user.hobbies,
+          profilePicture: user.profilePicture,
+          gallery: user.gallery,
+          lastPictureTaken: user.lastPictureTaken
+        };
+        return userResponse;
+      }) || [];
+    const totalCount = result[0]?.totalCount[0]?.count || 0;
+
+    return {
+      count: totalCount,
+      page: limit < 1 ? 1 : Number(page),
+      data: paginatedUsers
+    };
   }
 }

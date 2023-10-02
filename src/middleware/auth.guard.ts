@@ -8,13 +8,18 @@ import { Reflector } from '@nestjs/core';
 import { Roles } from '../users/user.enum';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/user.service';
+import { Request } from 'express';
+import { AuthUser } from '../auth/auth.types';
+import { ContextService } from '../context/context.service';
+import { UserContext } from '../context/user.context';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private jwtService: JwtService,
-    private userService: UsersService
+    private userService: UsersService,
+    private readonly contextService: ContextService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,25 +28,57 @@ export class AuthGuard implements CanActivate {
     const req = await context.switchToHttp().getRequest();
     const headers = req.headers.authorization;
 
-    if (headers.includes('Bearer ')) {
-      const info = headers.split('Bearer ');
-      if (info.length > 1 && info[1]) {
-        try {
-          const verify = await this.jwtService.verify(info[1]);
-          const user = await this.userService.getOneUser(verify.id);
+    const authenticatedUser = await this.authenticateUser(headers);
+    this.contextService.userContext = new UserContext(authenticatedUser);
 
-          if (user.role != Roles.ADMIN && user.role != role) {
-            console.log('Roles are not matching');
-            throw new UnauthorizedException();
-          }
-        } catch (error) {
-          throw new UnauthorizedException();
-        }
-      } else throw new UnauthorizedException();
-    } else {
+    if (
+      authenticatedUser.role != Roles.ADMIN &&
+      authenticatedUser.role != role
+    ) {
+      console.log('Roles are not matching');
       throw new UnauthorizedException();
     }
 
     return true;
+  }
+
+  private async authenticateUser(token: string): Promise<AuthUser> {
+    if (!token || !token.includes('Bearer ')) {
+      throw new UnauthorizedException();
+    }
+
+    const realToken = token.split('Bearer ');
+    if (realToken.length > 1 && realToken[1]) {
+      try {
+        const verify = await this.jwtService.verify(realToken[1]);
+        const user = await this.userService.getOneUser(verify.id);
+
+        if (!user) throw new UnauthorizedException();
+
+        const dataToReturn: AuthUser = {
+          _id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          createdAccountTimeStamp: user.createdAccountTimeStamp,
+          location: user.location,
+          gender: user.gender,
+          preference: user.preference,
+          age: user.age,
+          bio: user.bio,
+          hobbies: user.hobbies,
+          profilePicture: user.profilePicture,
+          gallery: user.gallery,
+          lastPictureTaken: user.lastPictureTaken,
+          prefferedAgeFrom: user.prefferedAgeFrom,
+          prefferedAgeTo: user.prefferedAgeTo,
+          prefferedRadius: user.prefferedRadius
+        };
+        return dataToReturn;
+      } catch (error) {
+        throw new UnauthorizedException();
+      }
+    } else throw new UnauthorizedException();
   }
 }

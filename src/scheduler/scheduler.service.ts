@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { UsersService } from '../users/user.service';
-import { UserPaginateDto } from '../users/dto/user.paginate.dto';
 import { AuthService } from '../auth/auth.service';
+import { UserPaginateDto } from '../users/user.types';
 
 @Injectable()
 export class SchedulerService {
@@ -19,16 +19,24 @@ export class SchedulerService {
       page: 1,
       sort: -1,
       sortBy: 'forgotPasswordTimestamp',
-      name: null,
+      _id: null,
+      firstName: null,
+      lastName: null,
       email: null,
       role: null,
       forgotPasswordToken: null,
       forgotPasswordTimestamp: new Date(
         timeFiveMinutesAgo.setMinutes(timeFiveMinutesAgo.getMinutes() - 5)
       ).toISOString(),
-      createdAccountTimestamp: null
+      createdAccountTimestamp: null,
+      gender: null,
+      preference: null,
+      age: null,
+      hobbies: null,
+      profilePicture: null,
+      gallery: null,
+      lastPictureTaken: null
     };
-    console.log('Scheduler radi');
     const users = await this.userService.getAllUsers(test);
     const promises = [];
     users.data.forEach((user) => {

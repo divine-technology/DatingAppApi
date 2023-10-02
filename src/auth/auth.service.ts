@@ -1,4 +1,6 @@
 import {
+  ConflictException,
+  ExecutionContext,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -6,32 +8,42 @@ import {
 } from '@nestjs/common';
 import { AuthRepository } from './auth.repository';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/user.service';
-import { LoginUserDto } from './auth.types';
+import { UsersService, numberOfSalts } from '../users/user.service';
+import {
+  AuthResponseDto,
+  AuthUser,
+  ForgotPasswordResponseDto,
+  LoginUserDto
+} from './auth.types';
 import * as bcrypt from 'bcryptjs';
 import { ForgotPasswordDto } from './auth.types';
 import { ChangeForgotPasswordDto } from './auth.types';
 import { ChangePasswordDto } from './auth.types';
+import { CreateUserDto } from '../users/user.types';
+import { User } from '../users/user.schema';
+import { Roles } from '../users/user.enum';
+import { ContextService } from '../context/context.service';
 
 export const NUMBER_OF_SALTS = 10;
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly authRepository: AuthRepository,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
-    private jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly contextService: ContextService,
+    private readonly authRepository: AuthRepository
   ) {}
 
   async test() {
     return await this.authRepository.test();
   }
 
-  async loginUser(user: LoginUserDto): Promise<{ token: string }> {
+  async loginUser(user: LoginUserDto): Promise<AuthResponseDto> {
     const { email, password } = user;
     const conditionArray = [{ email }];
     const fetchedUser = await this.userService.findUserBy(conditionArray);
-    console.log(fetchedUser);
     if (!fetchedUser) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -45,10 +57,105 @@ export class AuthService {
     }
 
     const token = this.jwtService.sign({ id: fetchedUser._id });
-    return { token };
+    const dataToReturn: AuthResponseDto = {
+      user: {
+        _id: fetchedUser._id.toString(),
+        firstName: fetchedUser.firstName,
+        lastName: fetchedUser.lastName,
+        email: fetchedUser.email,
+        role: fetchedUser.role,
+        createdAccountTimeStamp: fetchedUser.createdAccountTimestamp,
+        location: fetchedUser.location,
+        gender: fetchedUser.gender,
+        preference: fetchedUser.preference,
+        age: fetchedUser.age,
+        bio: fetchedUser.bio,
+        hobbies: fetchedUser.hobbies,
+        profilePicture: fetchedUser.profilePicture,
+        gallery: fetchedUser.gallery,
+        lastPictureTaken: fetchedUser.lastName,
+        prefferedAgeFrom: fetchedUser.prefferedAgeFrom,
+        prefferedAgeTo: fetchedUser.prefferedAgeTo,
+        prefferedRadius: fetchedUser.prefferedRadius
+      },
+      token: token
+    };
+    return dataToReturn;
   }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<string> {
+  async getMe(): Promise<AuthUser> {
+    const dataToReturn = this.contextService.userContext.user;
+    return dataToReturn;
+  }
+
+  async createUser(user: CreateUserDto): Promise<AuthResponseDto> {
+    const { email, password } = user;
+    const lowercaseEmail = email.toLowerCase();
+    const conditionArray = [];
+    conditionArray.push({ email });
+    const existingUser = await this.userService.findUserBy(conditionArray);
+    if (existingUser != null) {
+      throw new ConflictException('Email already exists!');
+    } else {
+      const hashedPassword = await bcrypt.hash(password, numberOfSalts);
+      const newUser: User = {
+        ...user,
+        email: lowercaseEmail,
+        password: hashedPassword,
+        role: Roles.ADMIN,
+        forgotPasswordToken: null,
+        forgotPasswordTimestamp: null,
+        createdAccountTimestamp: new Date().toISOString(),
+        location: {
+          type: 'Point',
+          coordinates: [43.85643, 18.413029]
+        },
+        gender: null,
+        preference: null,
+        age: null,
+        bio: null,
+        hobbies: null,
+        profilePicture: null,
+        gallery: null,
+        lastPictureTaken: null,
+        prefferedAgeFrom: null,
+        prefferedAgeTo: null,
+        prefferedRadius: null
+      };
+      const finalUser = await this.userService.createUser(newUser);
+      const token = this.jwtService.sign({ id: finalUser._id });
+
+      const dataToReturn: AuthResponseDto = {
+        user: {
+          _id: finalUser._id.toString(),
+          firstName: finalUser.firstName,
+          lastName: finalUser.lastName,
+          email: finalUser.email,
+          role: finalUser.role,
+          createdAccountTimeStamp: finalUser.createdAccountTimestamp,
+          location: finalUser.location,
+          gender: finalUser.gender,
+          preference: finalUser.preference,
+          age: finalUser.age,
+          bio: finalUser.bio,
+          hobbies: finalUser.hobbies,
+          profilePicture: finalUser.profilePicture,
+          gallery: finalUser.gallery,
+          lastPictureTaken: finalUser.lastName,
+          prefferedAgeFrom: finalUser.prefferedAgeFrom,
+          prefferedAgeTo: finalUser.prefferedAgeTo,
+          prefferedRadius: finalUser.prefferedRadius
+        },
+        token: token
+      };
+
+      return dataToReturn;
+    }
+  }
+
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto
+  ): Promise<ForgotPasswordResponseDto> {
     const { email } = forgotPasswordDto;
     const conditionArray = [{ email }];
     const fetchedUser = await this.userService.findUserBy(conditionArray);
@@ -65,7 +172,9 @@ export class AuthService {
       timestamp
     });
     const user = await this.userService.findUserBy(conditionArray);
-    return user.forgotPasswordToken;
+    return {
+      forgotPasswordToken: user.forgotPasswordToken
+    };
   }
 
   async updateRecoveryTokenByEmail(

@@ -6,20 +6,12 @@ import {
   Param,
   Post,
   Put,
-  Query
+  Query,
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import { UsersService } from './user.service';
-import { CreateUserDto } from './dto/create.user.dto';
-import { User } from './user.schema';
-import { UpdateUserDto } from './dto/update.user.dto';
-import {
-  PaginateDto,
-  ResponsePaginateDto,
-  ResponsePaginateDtoMessages,
-  UserPaginateDto
-} from './dto/user.paginate.dto';
-import { UserRadiusDto } from './dto/user.radius.dto';
-import { MessageDto } from './dto/message.dto';
+import { User, UserWithId } from './user.schema';
 import {
   ApiBody,
   ApiExtraModels,
@@ -28,11 +20,18 @@ import {
   ApiTags,
   getSchemaPath
 } from '@nestjs/swagger';
+import { UPDATE_USER_EXAMPLE, USER_RADIUS_EXAMPLE } from '../swagger/example';
 import {
-  CREATE_USER_EXAMPLE,
-  UPDATE_USER_EXAMPLE,
-  USER_RADIUS_EXAMPLE
-} from '../swagger/example';
+  UpdateUserDto,
+  UserPaginateDto,
+  UserRadiusDto,
+  UserResponse
+} from './user.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { AuthUser } from '../auth/auth.types';
+import { Roles } from './user.enum';
+import { Auth } from '../middleware/auth.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('User')
 @Controller('users')
@@ -40,97 +39,52 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Get all users pagination' })
-  @ApiExtraModels(User)
+  @ApiExtraModels(ResponsePaginateDto<UserWithId>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    }
+    type: ResponsePaginateDto<UserWithId>
   })
   @Get()
   async getAllUsers(
     @Query()
     paginateDto: UserPaginateDto
-  ): Promise<ResponsePaginateDto> {
+  ): Promise<ResponsePaginateDto<UserWithId>> {
     return await this.usersService.getAllUsers(paginateDto);
   }
 
-  /* @Get('/for-like/:id')
-  async getAllForLikes(@Param('id') id: string): Promise<User[]> {
-    return await this.usersService.getAllForLikes(id);
-  }
-
-  @Put('/:id/like/:likedUserId')
-  async likeUser(
-    @Param('id') id: string,
-    @Param('likedUserId') likedUserId: string
-  ): Promise<string> {
-    return await this.usersService.likeUser(id, likedUserId);
-  }
-
-  @Put('/:id/dislike/:dislikedUserId')
-  async dislikeUser(
-    @Param('id') id: string,
-    @Param('dislikedUserId') dislikedUserId: string
-  ): Promise<string> {
-    return await this.usersService.dislikeUser(id, dislikedUserId);
-  } */
-
-  /* @Get('/for-like/:id')
-  async getAllForLikes(@Param('id') id: string): Promise<User[]> {
-    return await this.usersService.getAllForLikes(id);
-  } */
-
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Get all users in radius' })
-  @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE } })
-  @ApiExtraModels(User)
+  @ApiBody({ schema: { example: USER_RADIUS_EXAMPLE }, type: UserRadiusDto })
+  @ApiExtraModels(ResponsePaginateDto<UserResponse>)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    },
-    isArray: true
+    type: ResponsePaginateDto<UserResponse>
   })
   @Post('/radius')
   async getRadius(
     @Body()
-    userRadiusDto: UserRadiusDto
-  ): Promise<User[]> {
-    return await this.usersService.getRadius(userRadiusDto);
+    userRadiusDto: UserRadiusDto,
+    @Query() paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<UserResponse>> {
+    return await this.usersService.getRadius(userRadiusDto, paginateDto);
   }
 
   @ApiOperation({ summary: 'Get user by id' })
-  @ApiExtraModels(User)
+  @ApiExtraModels(UserResponse)
   @ApiResponse({
     status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    }
+    type: UserResponse
   })
   @Get('/get/:id')
-  async getOneUser(@Param('id') id: string): Promise<User> {
+  async getOneUser(@Param('id') id: string): Promise<AuthUser> {
     return await this.usersService.getOneUser(id);
   }
 
-  @ApiOperation({ summary: 'Create user' })
-  @ApiBody({ schema: { example: CREATE_USER_EXAMPLE } })
-  @ApiExtraModels(User)
-  @ApiResponse({
-    status: 200,
-    schema: {
-      $ref: getSchemaPath(User)
-    }
-  })
-  @Post()
-  async createUser(
-    @Body()
-    createUserDto: CreateUserDto
-  ): Promise<{ token: string }> {
-    return await this.usersService.createUser(createUserDto);
-  }
-
   @ApiOperation({ summary: 'Update user' })
-  @ApiBody({ schema: { example: UPDATE_USER_EXAMPLE } })
+  @ApiBody({
+    examples: UPDATE_USER_EXAMPLE,
+    type: UpdateUserDto
+  })
   @ApiExtraModels(User)
   @ApiResponse({
     status: 200,
@@ -148,6 +102,7 @@ export class UsersController {
     return await this.usersService.updateById(id, user);
   }
 
+  @Auth(Roles.ADMIN)
   @ApiOperation({ summary: 'Delete user' })
   @ApiExtraModels(User)
   @ApiResponse({
@@ -157,10 +112,40 @@ export class UsersController {
     }
   })
   @Delete('/delete/:id')
-  async deleteUser(
-    @Param('id')
-    id: string
+  async deleteUser(): Promise<User> {
+    return await this.usersService.deleteById();
+  }
+
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/upload/profile-image')
+  async uploadProfileImage(
+    @UploadedFile() image: Express.Multer.File
   ): Promise<User> {
-    return await this.usersService.deleteById(id);
+    return await this.usersService.uploadProfileImage(image);
+  }
+
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/upload/selfie-image')
+  async uploadSelfieImage(
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<User> {
+    return await this.usersService.uploadSelfieImage(image);
+  }
+
+  @Auth(Roles.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('/upload/gallery-image')
+  async uploadGalleryImage(
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<User> {
+    return await this.usersService.uploadGalleryImage(image);
+  }
+
+  @Auth(Roles.ADMIN)
+  @Get('/gallery')
+  async getUserGallery() {
+    return await this.usersService.getGallery();
   }
 }

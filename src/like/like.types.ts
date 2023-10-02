@@ -6,27 +6,35 @@ import {
   ValidationOptions,
   registerDecorator
 } from 'class-validator';
-import { Like } from '../users/user.schema';
-
-export interface ResponsePaginateDtoLikes {
-  pages: number;
-  page: number;
-  data: Like[];
-}
+import { Like, User, UserWithId } from '../users/user.schema';
+import { ApiProperty } from '@nestjs/swagger';
+import mongoose from 'mongoose';
 
 export class ReactWithUserDto {
+  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   likedUserId: string;
 
+  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   @IsMatchStatus()
   status: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   likedPhotoUrl: string;
+}
+
+export class LikeResponseDto {
+  @ApiProperty()
+  _id: mongoose.Types.ObjectId;
+  @ApiProperty()
+  user: Partial<UserWithId>;
+  @ApiProperty()
+  status: string;
 }
 
 export function IsMatchStatus(validationOptions?: ValidationOptions) {

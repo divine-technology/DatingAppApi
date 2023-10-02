@@ -1,14 +1,10 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Like, LikeWithId, User } from '../users/user.schema';
 import mongoose, { Model } from 'mongoose';
-import { PaginateDto } from '../users/dto/user.paginate.dto';
-import { ResponsePaginateDtoLikes } from './like.types';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
 
 export class LikeRepository {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Like.name) private likeModel: Model<Like>
-  ) {}
+  constructor(@InjectModel(Like.name) private likeModel: Model<Like>) {}
 
   async test() {
     return await 'LIKES TEST';
@@ -18,16 +14,10 @@ export class LikeRepository {
     return this.likeModel.find({ users: id }).exec();
   }
 
-  async getAllForLikes(excludedUserIds: string[], id: string): Promise<User[]> {
-    return this.userModel
-      .find({ _id: { $nin: excludedUserIds, $ne: id } })
-      .exec();
-  }
-
   async getBothLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -36,34 +26,34 @@ export class LikeRepository {
         status: { $in: ['liked_back'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
         users: { $in: id },
         status: { $in: ['liked_back'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
   }
 
+  async getAllLikes(id: mongoose.Types.ObjectId): Promise<LikeWithId[]> {
+    return await this.likeModel.find({
+      $or: [{ 'users.0': id }, { 'users.1': id }]
+    });
+  }
+
   async getLikes(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -72,25 +62,79 @@ export class LikeRepository {
         status: { $in: ['one_liked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
         'users.0': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getDislikes(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['disliked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['disliked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getDislikedBy(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['disliked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['disliked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -99,7 +143,7 @@ export class LikeRepository {
   async getLikeRequests(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -108,34 +152,37 @@ export class LikeRepository {
         status: { $in: ['one_liked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
         'users.1': id,
         status: { $in: ['one_liked'] }
       })
-      .populate('users', 'name email')
-      .select('status')
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('users status')
       .limit(limit)
       .skip((page - 1) * limit);
 
+    const dataToReturn: LikeWithId[] = [];
+    data.forEach((like) =>
+      dataToReturn.push({
+        _id: like._id,
+        users: like.users,
+        status: like.status
+      })
+    );
+
     return {
-      pages: numberOfPages,
+      count: count,
       page: limit < 1 ? 1 : page,
-      data
+      data: dataToReturn
     };
   }
 
   async getBlocked(
     id: mongoose.Types.ObjectId,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const { page, limit } = paginateDto;
 
     const count = await this.likeModel
@@ -144,25 +191,79 @@ export class LikeRepository {
         status: { $in: ['blocked'] }
       })
       .count();
-    let numberOfPages: number;
-    if (limit < 1) {
-      numberOfPages = 1;
-    } else {
-      numberOfPages = Math.ceil(count / limit);
-    }
 
     const data = await this.likeModel
       .find({
         'users.0': id,
         status: { $in: ['blocked'] }
       })
-      .populate('users', 'name email')
+      .populate('users', 'firstName lastName email gender bio age')
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
 
     return {
-      pages: numberOfPages,
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getBlockedBack(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['blocked_back'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.0': id,
+        status: { $in: ['blocked_back'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
+      page: limit < 1 ? 1 : page,
+      data
+    };
+  }
+
+  async getBlockedBy(
+    id: mongoose.Types.ObjectId,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<Like>> {
+    const { page, limit } = paginateDto;
+
+    const count = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['blocked'] }
+      })
+      .count();
+
+    const data = await this.likeModel
+      .find({
+        'users.1': id,
+        status: { $in: ['blocked'] }
+      })
+      .populate('users', 'firstName lastName email gender bio age')
+      .select('status')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    return {
+      count: count,
       page: limit < 1 ? 1 : page,
       data
     };
@@ -178,12 +279,20 @@ export class LikeRepository {
     });
   }
 
-  async findLikeById(id: string): Promise<Like> {
-    return await this.likeModel.findById(id);
+  async findLikeById(id: mongoose.Types.ObjectId): Promise<LikeWithId> {
+    return await this.likeModel
+      .findById(id)
+      .populate('users', '_id firstName lastName email gender bio age');
   }
 
   async deleteLike(id: string): Promise<Like> {
     return await this.likeModel.findByIdAndDelete(id);
+  }
+
+  async deleteLikeByUserId(id: mongoose.Types.ObjectId) {
+    return await this.likeModel.deleteMany({
+      $or: [{ 'users.0': id }, { 'users.1': id }]
+    });
   }
 
   async updateReaction(id: string, like: Like): Promise<LikeWithId> {

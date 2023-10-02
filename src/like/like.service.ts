@@ -1,22 +1,36 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  forwardRef
+} from '@nestjs/common';
 import { LikeRepository } from './like.repository';
 import { UsersService } from '../users/user.service';
-import { PaginateDto } from '../users/dto/user.paginate.dto';
 import mongoose from 'mongoose';
 import {
   ReactWithUserDto,
-  ResponsePaginateDtoLikes,
   MatchStatus,
-  LikeWithErrorStatus
+  LikeWithErrorStatus,
+  LikeResponseDto
 } from './like.types';
-import { Like, LikeWithId } from '../users/user.schema';
+import { Like, LikeWithId, Message } from '../users/user.schema';
 import { MessageService } from '../message/message.service';
+import { PaginateDto, ResponsePaginateDto } from '../common/pagination.dto';
+import { MessageDto } from '../message/message.types';
+import { ContextService } from '../context/context.service';
+import { ImageService } from '../image/image.service';
 
 @Injectable()
 export class LikeService {
   constructor(
     private readonly likeRepository: LikeRepository,
-    private readonly userService: UsersService //private readonly messageService: MessageService
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService, //private readonly messageService: MessageService
+    @Inject(forwardRef(() => MessageService))
+    private readonly messageService: MessageService,
+    @Inject(forwardRef(() => MessageService))
+    private readonly imageService: ImageService,
+    private readonly contextService: ContextService
   ) {}
 
   async test() {
@@ -26,19 +40,24 @@ export class LikeService {
   async getBothLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBothLikes(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
     const page = likes.page;
 
-    const newTestArray = [];
+    const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({
+        _id: item._id,
+        user:
+          item.users[1]._id.toString() === id ? item.users[0] : item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -46,22 +65,57 @@ export class LikeService {
     return dataToReturn;
   }
 
+  async getAllLikes(id: string): Promise<LikeWithId[]> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getAllLikes(newId);
+    return likes;
+  }
+
   async getLikes(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikes(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
+
     const page = likes.page;
 
-    const newTestArray = [];
+    const newTestArray: LikeResponseDto[] = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
-      pages,
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getDislikes(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const dislikes = await this.likeRepository.getDislikes(newId, paginateDto);
+    const count = dislikes.count;
+
+    const page = dislikes.page;
+
+    const newTestArray = [];
+    dislikes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[1], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
       page,
       data: newTestArray
     };
@@ -72,19 +126,24 @@ export class LikeService {
   async getLikeRequests(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeWithId>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getLikeRequests(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
+
     const page = likes.page;
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[0], item.status);
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[0],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -95,19 +154,23 @@ export class LikeService {
   async getBlocked(
     id: string,
     paginateDto: PaginateDto
-  ): Promise<ResponsePaginateDtoLikes> {
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
     const newId = new mongoose.Types.ObjectId(id);
     const likes = await this.likeRepository.getBlocked(newId, paginateDto);
-    const pages = likes.pages;
+    const count = likes.count;
     const page = likes.page;
 
     const newTestArray = [];
     likes.data.forEach((item) => {
-      newTestArray.push(item.users[1], item.status);
+      newTestArray.push({
+        _id: item._id,
+        user: item.users[1],
+        status: item.status
+      });
     });
 
     const dataToReturn = {
-      pages,
+      count,
       page,
       data: newTestArray
     };
@@ -115,61 +178,107 @@ export class LikeService {
     return dataToReturn;
   }
 
-  async reactWithUser(
+  async getBlockedBack(
     id: string,
-    reactWithUserDto: ReactWithUserDto
-  ): Promise<string> {
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getBlockedBack(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[1], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getBlockedBy(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getBlockedBy(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[0], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async getDislikedBy(
+    id: string,
+    paginateDto: PaginateDto
+  ): Promise<ResponsePaginateDto<LikeResponseDto>> {
+    const newId = new mongoose.Types.ObjectId(id);
+    const likes = await this.likeRepository.getDislikedBy(newId, paginateDto);
+    const count = likes.count;
+
+    const page = likes.page;
+
+    const newTestArray = [];
+    likes.data.forEach((item) => {
+      newTestArray.push({ user: item.users[0], status: item.status });
+    });
+
+    const dataToReturn = {
+      count,
+      page,
+      data: newTestArray
+    };
+
+    return dataToReturn;
+  }
+
+  async reactWithUser(reactWithUserDto: ReactWithUserDto): Promise<string> {
+    const id = this.contextService.userContext.user._id;
     let like: LikeWithErrorStatus;
-    let message: Boolean;
+    let message: Message;
     if (
       reactWithUserDto.status === MatchStatus.LIKED &&
       reactWithUserDto.likedPhotoUrl != null
     ) {
       const { likedUserId, likedPhotoUrl } = reactWithUserDto;
-      const messageDto = {
-        from: id,
-        to: likedUserId,
-        message: likedPhotoUrl
-      };
 
       like = await this.like(id, likedUserId);
-      console.log('FUCKING LIKE: ', { like });
       if (like.hasErrors) {
         throw new UnauthorizedException('Error with liking');
       } else {
-        message = await this.userService.sendMessage(
-          like._id.toString(),
-          messageDto
-        );
-        if (!message) {
-          throw new UnauthorizedException('Error with sending message');
-        } else return 'Reaction saved!';
-      }
-      /* try {
-        console.log('STEP ONE');
-        like = await this.like(id, likedUserId);
-        console.log('STEP TWO');
-        console.log('STATUS ', like.status);
-        await this.userService.sendMessage(like._id.toString(), messageDto);
-        return 'Reaction saved';
-      } catch {
-        console.log('COCK');
-        console.log('LIKE STATUS: ', like.status);
-        if (like.status === MatchStatus.ONE_LIKED) {
-          await this.likeRepository.deleteLike(like._id.toString());
-          throw new UnauthorizedException('Not a picture! (1)');
-        } else if (like.status === MatchStatus.LIKED_BACK) {
-          const likeToUpdate = new Like();
-          likeToUpdate.status = MatchStatus.ONE_LIKED;
-          await this.likeRepository.updateReaction(
+        try {
+          const messageDto: MessageDto = {
+            from: id,
+            message: null,
+            imageUrl: likedPhotoUrl
+          };
+          message = await this.messageService.sendMessage(
             like._id.toString(),
-            likeToUpdate
+            messageDto
           );
-          throw new UnauthorizedException('Not a picture! (2)');
-        } else {
-          throw new UnauthorizedException('How did you get here?');
+          return 'Reaction saved!';
+        } catch (e) {
+          throw new UnauthorizedException(e);
         }
-      } */
+      }
     } else if (reactWithUserDto.status === MatchStatus.DISLIKED) {
       return await this.dislike(id, reactWithUserDto.likedUserId);
     } else if (reactWithUserDto.status === MatchStatus.BLOCKED) {
@@ -192,8 +301,6 @@ export class LikeService {
     let likeWithErrorStatus = null;
 
     if (!doesMatchExist) {
-      console.log('MATCH DOESNT EXIST');
-
       like.users = [newId, newlikedUserId];
       like.status = MatchStatus.ONE_LIKED;
       likeWithErrorStatus = await this.likeRepository.reactWithUser(like);
@@ -203,19 +310,10 @@ export class LikeService {
       };
       //return 'Reaction saved';
     } else {
-      console.log('MATCH EXISTS');
-      console.log(
-        'IS IT TRUE OR FALSE: ',
-        doesMatchExist.users[1].toString(),
-        ' 2: ',
-        newId.toString()
-      );
       if (
         doesMatchExist.users[1].toString() === newId.toString() &&
         doesMatchExist.status === MatchStatus.ONE_LIKED
       ) {
-        console.log('LIKED BACK');
-
         like.status = MatchStatus.LIKED_BACK;
         likeWithErrorStatus = await this.likeRepository.updateReaction(
           doesMatchExist._id.toString(),
@@ -228,7 +326,6 @@ export class LikeService {
         };
         //return 'Reaction saved (LIKED BACK)';
       } else {
-        console.log('SHIT');
         return {
           hasErrors: true,
           _id: null
@@ -252,7 +349,7 @@ export class LikeService {
       return 'Reaction saved';
     } else {
       if (
-        doesMatchExist.users[1].toString() === newId.toString() &&
+        // doesMatchExist.users[1].toString() === newId.toString() &&
         doesMatchExist.status === MatchStatus.ONE_LIKED
       ) {
         like.users = [newId, newlikedUserId];
@@ -299,6 +396,36 @@ export class LikeService {
     }
   }
 
+  async blockById(likeId: string): Promise<string> {
+    const fetchedLike = await this.likeRepository.findLikeById(
+      new mongoose.Types.ObjectId(likeId)
+    );
+    const currentUser = this.contextService.userContext.user._id;
+    const like = new Like();
+
+    if (fetchedLike) {
+      if (
+        fetchedLike.status === MatchStatus.ONE_LIKED ||
+        fetchedLike.status === MatchStatus.LIKED_BACK
+      ) {
+        if (fetchedLike.users[0]._id.toString() === currentUser) {
+          like.status = MatchStatus.BLOCKED;
+        } else {
+          like.status = MatchStatus.BLOCKED_BACK;
+        }
+        await this.likeRepository.updateReaction(
+          (fetchedLike as LikeWithId)._id.toString(),
+          like
+        );
+        return 'Reaction saved (BLOCKED / BLOCKED BACK)';
+      } else {
+        throw new UnauthorizedException();
+      }
+    } else {
+      throw new UnauthorizedException();
+    }
+  }
+
   async unblock(id: string, likedUserId: string): Promise<string> {
     const matchArray = [id, likedUserId];
     const doesMatchExist = await this.likeRepository.findLike(matchArray);
@@ -312,22 +439,18 @@ export class LikeService {
     whereArray.push({ likeId: doesMatchExist._id.toString() });
 
     if (doesMatchExist) {
-      console.log(doesMatchExist);
-      console.log(doesMatchExist.users[0].toString() === newId.toString());
       if (
         doesMatchExist.status === MatchStatus.BLOCKED &&
         doesMatchExist.users[0].toString() === newId.toString()
       ) {
-        const links = await this.userService.getPhotoLinks(whereArray);
-        console.log('PHOTO URLS: ', links);
-        await this.userService.deleteMessages(doesMatchExist._id.toString());
+        const links = await this.messageService.getPhotoLinks(whereArray);
+        await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else if (
         doesMatchExist.status === MatchStatus.BLOCKED_BACK &&
         doesMatchExist.users[1].toString() === newId.toString()
       ) {
-        const links = await this.userService.getPhotoLinks(whereArray);
-        console.log('PHOTO URLS: ', links);
-        await this.userService.deleteMessages(doesMatchExist._id.toString());
+        const links = await this.messageService.getPhotoLinks(whereArray);
+        await this.messageService.deleteMessages(doesMatchExist._id.toString());
       } else {
         throw new UnauthorizedException();
       }
@@ -338,7 +461,14 @@ export class LikeService {
     }
   }
 
+  async deleteLikeByUserId(userId: string) {
+    const id = new mongoose.Types.ObjectId(userId);
+    return await this.likeRepository.deleteLikeByUserId(id);
+  }
+
   async findLikeById(likeId: string) {
-    return await this.likeRepository.findLikeById(likeId);
+    return await this.likeRepository.findLikeById(
+      new mongoose.Types.ObjectId(likeId)
+    );
   }
 }

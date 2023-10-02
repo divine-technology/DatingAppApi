@@ -14,16 +14,23 @@ export class Message {
   likeId: mongoose.Types.ObjectId;
 
   @ApiProperty()
-  @Prop()
-  from: string;
-
-  @ApiProperty()
-  @Prop()
-  to: string;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
+  from: mongoose.Types.ObjectId;
 
   @ApiProperty()
   @Prop()
   message: string;
+
+  @ApiProperty()
+  @Prop()
+  image?: string;
+}
+
+export class MessageWithDate extends Message {
+  @ApiProperty()
+  _id: mongoose.Types.ObjectId;
+  @ApiProperty()
+  createdAt: Date;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
@@ -51,9 +58,9 @@ export class Location {
   @Prop({ type: String, default: 'Point' })
   type: string;
 
-  @ApiProperty()
-  @Prop({ type: [Number], required: true })
-  coordinates: number[];
+  @ApiProperty({ type: Number, isArray: true, required: true })
+  @Prop()
+  coordinates: [number, number];
 }
 
 export const LocationSchema = SchemaFactory.createForClass(Location);
@@ -61,7 +68,11 @@ export const LocationSchema = SchemaFactory.createForClass(Location);
 export class User {
   @ApiProperty()
   @Prop()
-  name: string;
+  firstName: string;
+
+  @ApiProperty()
+  @Prop()
+  lastName: string;
 
   @ApiProperty()
   @Prop()
@@ -90,6 +101,50 @@ export class User {
   @ApiProperty()
   @Prop({ type: LocationSchema, index: '2dsphere' })
   location: Location;
+
+  @ApiProperty()
+  @Prop()
+  gender: string;
+
+  @ApiProperty()
+  @Prop()
+  preference: string;
+
+  @ApiProperty()
+  @Prop()
+  age: number;
+
+  @ApiProperty()
+  @Prop()
+  bio: string;
+
+  @ApiProperty()
+  @Prop()
+  hobbies: string[];
+
+  @ApiProperty()
+  @Prop()
+  profilePicture: string;
+
+  @ApiProperty()
+  @Prop()
+  gallery: string[];
+
+  @ApiProperty()
+  @Prop()
+  lastPictureTaken: string;
+
+  @ApiProperty()
+  @Prop()
+  prefferedAgeFrom: number;
+
+  @ApiProperty()
+  @Prop()
+  prefferedAgeTo: number;
+
+  @ApiProperty()
+  @Prop()
+  prefferedRadius: number;
 }
 
 export class UserWithId extends User {
