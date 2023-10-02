@@ -73,7 +73,7 @@ export class AuthService {
         hobbies: fetchedUser.hobbies,
         profilePicture: fetchedUser.profilePicture,
         gallery: fetchedUser.gallery,
-        lastPictureTaken: fetchedUser.lastName,
+        lastPictureTaken: fetchedUser.lastPictureTaken,
         prefferedAgeFrom: fetchedUser.prefferedAgeFrom,
         prefferedAgeTo: fetchedUser.prefferedAgeTo,
         prefferedRadius: fetchedUser.prefferedRadius
@@ -141,7 +141,7 @@ export class AuthService {
           hobbies: finalUser.hobbies,
           profilePicture: finalUser.profilePicture,
           gallery: finalUser.gallery,
-          lastPictureTaken: finalUser.lastName,
+          lastPictureTaken: finalUser.lastPictureTaken,
           prefferedAgeFrom: finalUser.prefferedAgeFrom,
           prefferedAgeTo: finalUser.prefferedAgeTo,
           prefferedRadius: finalUser.prefferedRadius

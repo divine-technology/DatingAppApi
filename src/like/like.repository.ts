@@ -197,7 +197,10 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['blocked'] }
       })
-      .populate('users', 'firstName lastName email gender bio age')
+      .populate(
+        'users',
+        'firstName lastName email gender bio age profilePicture lastPictureTaken'
+      )
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -227,7 +230,10 @@ export class LikeRepository {
         'users.0': id,
         status: { $in: ['blocked_back'] }
       })
-      .populate('users', 'firstName lastName email gender bio age')
+      .populate(
+        'users',
+        'firstName lastName email gender bio age profilePicture lastPictureTaken'
+      )
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);
@@ -257,7 +263,10 @@ export class LikeRepository {
         'users.1': id,
         status: { $in: ['blocked'] }
       })
-      .populate('users', 'firstName lastName email gender bio age')
+      .populate(
+        'users',
+        'firstName lastName email gender bio age profilePicture lastPictureTaken'
+      )
       .select('status')
       .limit(limit)
       .skip((page - 1) * limit);

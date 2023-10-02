@@ -309,7 +309,9 @@ export class MessageRepository {
           lastName: message.fromUser.lastName,
           role: message.fromUser.role,
           gender: message.fromUser.gender,
-          age: message.fromUser.age
+          age: message.fromUser.age,
+          profilePicture: message.fromUser.profilePicture,
+          lastPictureTaken: message.fromUser.lastPictureTaken
         },
         toUser: {
           _id:
@@ -341,7 +343,17 @@ export class MessageRepository {
             message.fromUser._id.toString() ===
             message.usersData[0]._id.toString()
               ? message.usersData[1].age
-              : message.usersData[0].age
+              : message.usersData[0].age,
+          profilePicture:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].profilePicture
+              : message.usersData[0].profilePicture,
+          lastPictureTaken:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].lastPictureTaken
+              : message.usersData[0].lastPictureTaken
         },
         message: message.latestMessage.message,
         createdAt: message.latestMessage.createdAt,
@@ -444,7 +456,9 @@ export class MessageRepository {
           lastName: message.fromUser.lastName,
           role: message.fromUser.role,
           gender: message.fromUser.gender,
-          age: message.fromUser.age
+          age: message.fromUser.age,
+          profilePicture: message.fromUser.profilePicture,
+          lastPictureTaken: message.fromUser.lastPictureTaken
         },
         toUser: {
           _id:
@@ -476,7 +490,17 @@ export class MessageRepository {
             message.fromUser._id.toString() ===
             message.usersData[0]._id.toString()
               ? message.usersData[1].age
-              : message.usersData[0].age
+              : message.usersData[0].age,
+          profilePicture:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].profilePicture
+              : message.usersData[0].profilePicture,
+          lastPictureTaken:
+            message.fromUser._id.toString() ===
+            message.usersData[0]._id.toString()
+              ? message.usersData[1].lastPictureTaken
+              : message.usersData[0].lastPictureTaken
         },
         message: message.latestMessage.message,
         createdAt: message.latestMessage.createdAt,
